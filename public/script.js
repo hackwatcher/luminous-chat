@@ -273,7 +273,11 @@ class ScreenManager {
             const adminLink = document.getElementById('admin-link-container');
 
             if (back) back.onclick = () => this.switchScreen('discover');
-            if (logout) logout.onclick = () => { localStorage.clear(); window.location.reload(); };
+            if (logout) logout.onclick = () => { 
+                // Only clear active session, keep account memory for next login
+                localStorage.removeItem('luminous_user');
+                window.location.reload(); 
+            };
             if (premBtn) premBtn.onclick = () => this.switchScreen('premium');
             
             // Role check for Admin Panel
@@ -341,7 +345,7 @@ class ScreenManager {
         }
     }
 
-    attachGlobalElements(screenName) {
+    attachGlobalElements(name) {
         // Sync User Profile Data to Navbar/Header
         const saved = localStorage.getItem('luminous_user');
         if (saved) {
@@ -351,27 +355,8 @@ class ScreenManager {
             if (navImg && user.photo) navImg.src = user.photo;
             if (navName && user.name) navName.innerText = user.name;
         }
-    }
 
-    updateNavState(screenName) {
-        // Screens where navigation bar should be visible
-        const mainScreens = ['discover', 'inbox', 'history', 'profile', 'settings'];
-        if (mainScreens.includes(screenName)) {
-            this.nav.classList.remove('hidden');
-            this.nav.style.display = 'flex';
-        } else {
-            this.nav.classList.add('hidden');
-            this.nav.style.display = 'none';
-        }
-
-        // Active state highlight
-        document.querySelectorAll('#global-nav [data-nav]').forEach(btn => {
-            if (btn.getAttribute('data-nav') === screenName) btn.classList.add('nav-active');
-            else btn.classList.remove('nav-active');
-        });
-    }
-
-    attachGlobalElements(name) {
+        // Video element routing
         if (name === 'chat') {
             const rv = document.getElementById('remote-video');
             const lv = document.getElementById('local-video');
@@ -381,6 +366,21 @@ class ScreenManager {
             const rv = document.getElementById('remote-video');
             if (rv) rv.style.display = 'none';
         }
+    }
+
+    updateNavState(screenName) {
+        const mainScreens = ['discover', 'inbox', 'history', 'profile', 'settings'];
+        if (mainScreens.includes(screenName)) {
+            this.nav.classList.remove('hidden');
+            this.nav.style.display = 'flex';
+        } else {
+            this.nav.classList.add('hidden');
+            this.nav.style.display = 'none';
+        }
+        document.querySelectorAll('#global-nav [data-nav]').forEach(btn => {
+            if (btn.getAttribute('data-nav') === screenName) btn.classList.add('nav-active');
+            else btn.classList.remove('nav-active');
+        });
     }
 
     initSwipeDeck() {
@@ -838,21 +838,31 @@ const screenMgr = new ScreenManager('app-container');
 let localStream = null, isConnected = false, currentPartnerAnonId = '';
 
 async function initMedia() {
-    // Check for Ban Status
+    // Check for Ban Status - only ban users in the actual ban list
     const user = JSON.parse(localStorage.getItem('luminous_user') || '{}');
     const bannedList = JSON.parse(localStorage.getItem('luminous_banned_list') || '[]');
-    if (user.role !== 'admin' && (bannedList.includes(user.name) || bannedList.includes('User_Anon_9281'))) {
-        document.getElementById('banned-overlay').classList.remove('hidden');
+    const isBanned = user.role !== 'admin' && user.name && bannedList.includes(user.name);
+    
+    if (isBanned) {
+        const overlay = document.getElementById('banned-overlay');
+        if (overlay) overlay.classList.remove('hidden');
         return;
     }
 
+    // Show correct screen based on auth state
+    const savedUser = localStorage.getItem('luminous_user');
+    const startScreen = savedUser ? 'discover' : 'splash';
+    screenMgr.switchScreen(startScreen);
+
+    // Try to get camera in background (used when entering chat)
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         const lv = document.getElementById('local-video');
         if (lv) lv.srcObject = localStream;
-        const saved = localStorage.getItem('luminous_user');
-        screenMgr.switchScreen(saved ? 'discover' : 'splash');
-    } catch (err) { alert('Camera access required.'); }
+    } catch (err) { 
+        console.warn('[Media] Camera not available:', err.message);
+        // App continues without camera - it's only needed in chat
+    }
 }
 
 function saveToInbox(partner, msg) {
