@@ -908,7 +908,7 @@ function appendRemoteMessage(text) {
     list.appendChild(div); list.scrollTop = list.scrollHeight;
 }
 
-FirebaseAuth.watchAuthState(async (user) => {
+watchAuthState(async (user) => {
     if (user) {
         console.log("[Auth] User is logged in:", user.uid);
         let saved = JSON.parse(localStorage.getItem('luminous_user') || '{}');
