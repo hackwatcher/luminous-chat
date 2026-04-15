@@ -3,7 +3,18 @@
 ════════════════════════════════════════════════════════════ */
 'use strict';
 
-import * as FirebaseAuth from './services/auth.js';
+import { 
+    loginWithGoogle, 
+    loginWithFacebook, 
+    loginWithPhone, 
+    loginAnonymously, 
+    registerWithEmail,
+    loginWithEmail,
+    saveUserProfile,
+    getUserProfile,
+    watchAuthState, 
+    logout 
+} from './services/auth.js';
 
 const PROFILES = [
     { id: 1, name: 'Elena', age: 24, bio: 'Chasing neon lights and cinematic frames. 🌙', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJ8J-e6JNHFX8-Uod0WhZIIlV8CEGZd4P9gsiwpnYW12oyySqxgpGPZNoNYFLO_KMpfJVeG4EsZTBVFHP24Nas7guIwJ3JLfOxA_9XiskTxNJo8Bqyjja1gaIUq1DxhdTClAnF8IftsVxhAu6JoggkIA43MFW5mnH-BCHVtN5ulYFTp-cIjcsMV_ssqQ1lMWQTjc9N9539MQzsMI_NCQ_pcWyvOHbReu9du377pOZ8eHH-VCBViIeNzlf6_CXbCJRkFd28LI0k3XC3', tags: ['Art', 'Music'] },
@@ -90,14 +101,25 @@ class ScreenManager {
                 formToggle.innerHTML = isLoginMode ? 'New here? <span class="font-bold text-primary">Create Account</span>' : 'Already have an account? <span class="font-bold text-primary">Login</span>';
             };
 
-            const handleUser = (user) => {
+            const handleUser = async (user) => {
                 if (user) {
                     const accounts = JSON.parse(localStorage.getItem('luminous_accounts') || '{}');
-                    const savedProfile = accounts[user.email] || {};
+                    let savedProfile = accounts[user.email];
+                    
+                    // NEW: Try to fetch from Cloud Firestore if local mock fails
+                    if (!savedProfile) {
+                        try {
+                            savedProfile = await getUserProfile(user.uid);
+                            console.log('[Auth] Profile recovered from Cloud Firestore');
+                        } catch (e) { console.error('[Auth] Firestore fetch failed'); }
+                    }
+
+                    savedProfile = savedProfile || {};
                     const role = user.email === 'golcuu16@gmail.com' ? 'admin' : 'user';
                     
                     const userData = {
                         ...savedProfile,
+                        uid: user.uid,
                         name: savedProfile.name || user.displayName || user.email?.split('@')[0] || 'Guest',
                         email: user.email,
                         role: role
@@ -120,7 +142,7 @@ class ScreenManager {
                         submitBtn.innerText = 'Processing...';
                         let user;
                         try {
-                             user = isLoginMode ? await FirebaseAuth.loginWithEmail(email, pass) : await FirebaseAuth.registerWithEmail(email, pass);
+                             user = isLoginMode ? await loginWithEmail(email, pass) : await registerWithEmail(email, pass);
                         } catch (fError) { console.warn("Firebase bypassed, using mock."); }
 
                         if (!user) user = { email: email, displayName: email.split('@')[0] };
@@ -136,7 +158,7 @@ class ScreenManager {
             const gBtn = document.getElementById('auth-google-btn');
             if (gBtn) gBtn.onclick = async () => {
                 try {
-                    const user = await FirebaseAuth.loginWithGoogle();
+                    const user = await loginWithGoogle();
                     handleUser(user);
                 } catch(e) { 
                     if (e.message !== "CONFIG_MISSING") alert("Google login failed: " + e.message); 
@@ -146,7 +168,7 @@ class ScreenManager {
             const fBtn = document.getElementById('auth-facebook-btn');
             if (fBtn) fBtn.onclick = async () => {
                 try {
-                    const user = await FirebaseAuth.loginWithFacebook();
+                    const user = await loginWithFacebook();
                     if (user) handleUser(user);
                 } catch(e) { alert("Facebook login failed"); }
             };
@@ -154,7 +176,7 @@ class ScreenManager {
             const pBtn = document.getElementById('auth-phone-btn');
             if (pBtn) pBtn.onclick = () => {
                 const num = prompt("Enter your phone number (+90...):");
-                if (num) FirebaseAuth.loginWithPhone(num).then(res => {
+                if (num) loginWithPhone(num).then(res => {
                     const code = prompt("Enter the SMS code:");
                     res.confirm(code).then(r => handleUser(r.user));
                 });
@@ -162,7 +184,7 @@ class ScreenManager {
 
             const sBtn = document.getElementById('auth-skip-btn');
             if (sBtn) sBtn.onclick = async () => {
-                try { const user = await FirebaseAuth.loginAnonymously(); handleUser(user); }
+                try { const user = await loginAnonymously(); handleUser(user); }
                 catch(e) { handleUser({ displayName: 'Guest' }); }
             };
         }
@@ -186,14 +208,59 @@ class ScreenManager {
         if (name === 'chat') this.wireChatEvents();
 
         if (name === 'profile') {
+            const user = JSON.parse(localStorage.getItem('luminous_user') || '{}');
+            const nameInp = document.getElementById('profile-name');
+            const bioInp = document.getElementById('profile-bio');
+            const preview = document.getElementById('profile-preview-img');
             const back = document.getElementById('profile-back-btn');
             const save = document.getElementById('profile-save-btn');
+            const editPhoto = document.getElementById('profile-edit-photo');
+
+            if (nameInp) nameInp.value = user.name || '';
+            if (bioInp) bioInp.value = user.bio || '';
+            if (preview && user.photo) preview.src = user.photo;
+
+            if (editPhoto) editPhoto.onclick = () => {
+                const newUrl = prompt("Enter new photo URL:");
+                if (newUrl && preview) {
+                    preview.src = newUrl;
+                    user.photo = newUrl;
+                }
+            };
+
             if (back) back.onclick = () => this.switchScreen('discover');
-            if (save) save.onclick = () => {
-                const n = document.getElementById('profile-name').value;
-                const b = document.getElementById('profile-bio').value;
-                localStorage.setItem('luminous_user', JSON.stringify({ name: n, bio: b }));
-                alert('Saved!');
+            
+            if (save) save.onclick = async () => {
+                try {
+                    save.innerText = '...';
+                    const updatedData = {
+                        ...user,
+                        name: nameInp.value,
+                        bio: bioInp.value,
+                        photo: preview.src
+                    };
+
+                    // Save to Cloud
+                    if (user.uid) {
+                        await saveUserProfile(user.uid, updatedData);
+                    }
+
+                    // Save Locally
+                    localStorage.setItem('luminous_user', JSON.stringify(updatedData));
+                    
+                    // Update mock accounts
+                    if (user.email) {
+                        const accs = JSON.parse(localStorage.getItem('luminous_accounts') || '{}');
+                        accs[user.email] = updatedData;
+                        localStorage.setItem('luminous_accounts', JSON.stringify(accs));
+                    }
+
+                    alert('Profile updated successfully! ✨');
+                } catch (e) {
+                    alert('Failed to save profile');
+                } finally {
+                    save.innerText = 'Save';
+                }
             };
         }
 
@@ -687,12 +754,13 @@ class ScreenManager {
         return true;
     }
 
-    finishOnboarding() {
+    async finishOnboarding() {
         // Correctly identify role based on previously saved email or bio key
         const existingData = JSON.parse(localStorage.getItem('luminous_user') || '{}');
         const role = existingData.email === 'golcuu16@gmail.com' || this.onboardingData.bio?.includes('ADMIN_KEY_NEXUS') ? 'admin' : 'user';
 
         const finalProfile = {
+            uid: existingData.uid,
             name: this.onboardingData.name,
             email: existingData.email,
             age: this.onboardingData.age,
@@ -706,7 +774,15 @@ class ScreenManager {
 
         localStorage.setItem('luminous_user', JSON.stringify(finalProfile));
         
-        // Mock Account persistence for demo
+        // Save to Cloud Firestore for true persistence
+        if (finalProfile.uid) {
+            try {
+                await saveUserProfile(finalProfile.uid, finalProfile);
+                console.log('[Onboarding] Profile saved to Cloud');
+            } catch (e) { console.error('[Onboarding] Cloud save failed'); }
+        }
+
+        // Mock Account persistence for demo fallback
         if (finalProfile.email) {
             const accounts = JSON.parse(localStorage.getItem('luminous_accounts') || '{}');
             accounts[finalProfile.email] = finalProfile;
@@ -832,10 +908,22 @@ function appendRemoteMessage(text) {
     list.appendChild(div); list.scrollTop = list.scrollHeight;
 }
 
-FirebaseAuth.watchAuthState((user) => {
+FirebaseAuth.watchAuthState(async (user) => {
     if (user) {
         console.log("[Auth] User is logged in:", user.uid);
-        const saved = JSON.parse(localStorage.getItem('luminous_user') || '{}');
+        let saved = JSON.parse(localStorage.getItem('luminous_user') || '{}');
+        
+        // Try to recover from Cloud if local storage is empty
+        if (!saved.age) {
+            try {
+                const cloudProfile = await getUserProfile(user.uid);
+                if (cloudProfile) {
+                    saved = cloudProfile;
+                    localStorage.setItem('luminous_user', JSON.stringify(saved));
+                }
+            } catch (e) { console.error('[WatchAuth] Could not restore profile from cloud'); }
+        }
+
         const isProfileComplete = !!saved.age;
 
         if (screenMgr.currentScreen === 'splash' || screenMgr.currentScreen === 'auth') {
