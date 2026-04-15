@@ -273,10 +273,10 @@ class ScreenManager {
             const adminLink = document.getElementById('admin-link-container');
 
             if (back) back.onclick = () => this.switchScreen('discover');
-            if (logout) logout.onclick = async () => { 
-                try { await logout(); } catch(e) {}
+            if (logout) logout.onclick = async () => {
+                try { await logout(); } catch(e) { console.error(e); }
                 localStorage.removeItem('luminous_user');
-                window.location.reload(); 
+                window.location.reload();
             };
             if (premBtn) premBtn.onclick = () => this.switchScreen('premium');
             
@@ -838,25 +838,20 @@ const screenMgr = new ScreenManager('app-container');
 let localStream = null, isConnected = false, currentPartnerAnonId = '';
 
 async function initMedia() {
-    // Check for Ban Status only
+    // Ban check
     const user = JSON.parse(localStorage.getItem('luminous_user') || '{}');
-    const bannedList = JSON.parse(localStorage.getItem('luminous_banned_list') || '[]');
-    const isBanned = user.role !== 'admin' && user.name && bannedList.includes(user.name);
-    if (isBanned) {
+    const banned = JSON.parse(localStorage.getItem('luminous_banned_list') || '[]');
+    if (user.role !== 'admin' && user.name && banned.includes(user.name)) {
         const overlay = document.getElementById('banned-overlay');
         if (overlay) overlay.classList.remove('hidden');
         return;
     }
-
-    // Get camera in background - non-blocking
+    // Camera (non-blocking)
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         const lv = document.getElementById('local-video');
         if (lv) lv.srcObject = localStream;
-    } catch (err) { 
-        console.warn('[Media] Camera not available:', err.message);
-    }
-    // Screen routing is fully handled by watchAuthState below
+    } catch (e) { console.warn('[Camera] Not available'); }
 }
 
 function saveToInbox(partner, msg) {
@@ -912,40 +907,38 @@ function appendRemoteMessage(text) {
     list.appendChild(div); list.scrollTop = list.scrollHeight;
 }
 
-watchAuthState(async (user) => {
-    if (user) {
-        console.log("[Auth] User is logged in:", user.uid);
-        let saved = JSON.parse(localStorage.getItem('luminous_user') || '{}');
-        
-        // Try to recover from Cloud Firestore if local is empty
-        if (!saved.age && !user.isAnonymous) {
+watchAuthState(async (firebaseUser) => {
+    // This is the SINGLE source of truth for routing on app start
+    const isEntryScreen = !screenMgr.currentScreen || 
+        screenMgr.currentScreen === 'splash' || 
+        screenMgr.currentScreen === 'auth';
+
+    if (firebaseUser && !firebaseUser.isAnonymous) {
+        // Real logged-in user
+        let profile = JSON.parse(localStorage.getItem('luminous_user') || 'null');
+
+        if (!profile) {
+            // Try cloud first
             try {
-                const cloudProfile = await getUserProfile(user.uid);
-                if (cloudProfile) {
-                    saved = cloudProfile;
-                    localStorage.setItem('luminous_user', JSON.stringify(saved));
+                profile = await getUserProfile(firebaseUser.uid);
+                if (profile) {
+                    localStorage.setItem('luminous_user', JSON.stringify(profile));
                 }
-            } catch (e) { console.error('[WatchAuth] Cloud restore failed'); }
+            } catch(e) { console.warn('[Auth] Cloud fetch failed'); }
         }
 
-        const isProfileComplete = !!saved.age;
-
-        // Only redirect if on an entry screen (not inside the app already)
-        if (screenMgr.currentScreen === 'splash' || screenMgr.currentScreen === 'auth' || screenMgr.currentScreen === null) {
-            if (isProfileComplete) {
+        if (isEntryScreen) {
+            if (profile && profile.age) {
+                // Profile complete → go to app
                 screenMgr.switchScreen('discover');
-            } else if (!user.isAnonymous) {
-                // Only go to onboarding for real (non-guest) users
-                screenMgr.switchScreen('onboarding');
             } else {
-                // Anonymous/guest → show auth screen to encourage sign-up
-                screenMgr.switchScreen('splash');
+                // Profile incomplete → auth screen (handleUser will route to onboarding)
+                screenMgr.switchScreen('auth');
             }
         }
     } else {
-        // User is fully logged out — show splash
-        console.log("[Auth] User is logged out — showing splash");
-        if (screenMgr.currentScreen === null || screenMgr.currentScreen === 'discover') {
+        // No user (logged out or anonymous)
+        if (isEntryScreen) {
             screenMgr.switchScreen('splash');
         }
     }
