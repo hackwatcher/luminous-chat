@@ -199,10 +199,26 @@ class ScreenManager {
         if (name === 'matching') {
             const stopBtn = document.getElementById('stop-search-btn');
             if (stopBtn) stopBtn.onclick = () => { socket.emit('next'); this.switchScreen('discover'); };
-            if (!isConnected) {
-                console.log('[Socket] Sending start-search...');
-                socket.emit('start-search');
-            }
+
+            // Ensure camera is ready before searching
+            const startSearch = async () => {
+                if (!localStream) {
+                    try {
+                        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+                        const lv = document.getElementById('local-video');
+                        if (lv) lv.srcObject = localStream;
+                    } catch (err) {
+                        alert('Kamera ve mikrofon izni gerekli. Lütfen tarayıcı izinlerini kontrol edin.');
+                        this.switchScreen('discover');
+                        return;
+                    }
+                }
+                if (!isConnected) {
+                    console.log('[Socket] Sending start-search...');
+                    socket.emit('start-search');
+                }
+            };
+            startSearch();
         }
 
         if (name === 'chat') this.wireChatEvents();
