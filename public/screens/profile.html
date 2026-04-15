@@ -1,0 +1,30 @@
+<!-- Profile Screen -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4 no-border bg-gradient-to-b from-[#050f1c] to-transparent">
+    <button id="profile-back-btn" class="material-symbols-outlined text-slate-400">arrow_back</button>
+    <h1 class="text-xl font-bold text-white font-headline">My Profile</h1>
+    <button id="profile-save-btn" class="text-primary font-bold">Save</button>
+</header>
+
+<main class="pt-24 pb-32 px-6 overflow-y-auto h-screen hide-scrollbar">
+    <div class="flex flex-col items-center mb-10">
+        <div class="relative group">
+            <div class="w-32 h-32 rounded-full border-4 border-primary/20 p-1">
+                <img id="profile-preview-img" class="w-full h-full rounded-full object-cover" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAPwX2yBDYarmMcdUBQiqKnUvmGDfWRuwkwBoXXHO_uR1w76liVDH4CPaI4n-G_TLAYHJQlDiGTgPPI8gzZ5kT4lKtPZ9o-xDUmZzVVdCiQV1_zWtKfgnREdKPxA4LcfuaR1WnoDGJw1FBGKA39wSyoPe7ANxK3xMHIR0KkfLQtK53F7MHDJsdIWXxFaWd8g1jgSCbbtyh5ulNz-TcueqCCNMsWhy7XmBRTuOE2au5a2hcAhvkrwlptqUrY_NgktgiHnxtDxBGT-TZ3"/>
+            </div>
+            <div class="absolute bottom-0 right-0 bg-primary w-10 h-10 rounded-full flex items-center justify-center border-4 border-background cursor-pointer">
+                <span class="material-symbols-outlined text-white text-sm">edit</span>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-6">
+        <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">Display Name</label>
+            <input id="profile-name" type="text" value="User Name" class="w-full bg-surface-container border-none text-on-surface rounded-2xl py-4 px-6 focus:ring-2 focus:ring-primary"/>
+        </div>
+        <div>
+            <label class="block text-xs font-bold uppercase tracking-widest text-gray-500 mb-2">About Me</label>
+            <textarea id="profile-bio" rows="4" class="w-full bg-surface-container border-none text-on-surface rounded-2xl py-4 px-6 focus:ring-2 focus:ring-primary">Hey! I'm using Luminous.</textarea>
+        </div>
+    </div>
+</main>

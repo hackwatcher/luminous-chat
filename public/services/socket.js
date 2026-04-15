@@ -3,7 +3,8 @@
    The socket auto-reconnects; callers just import this file.
 ──────────────────────────────────────────────────────────────── */
 
-const socket = io({
+// Socket.IO instance automatically connects to the host that served the page
+const socket = io(window.location.origin, {
     transports   : ['websocket', 'polling'],
     reconnection : true,
     reconnectionAttempts : Infinity,

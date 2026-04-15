@@ -1,0 +1,24 @@
+<!-- Splash Screen -->
+<main class="h-screen w-full flex flex-col items-center justify-center px-8 relative overflow-hidden bg-background">
+    <!-- Animated Circles for Depth -->
+    <div class="absolute w-[500px] h-[500px] bg-primary rounded-full blur-[100px] -top-40 -left-40 animate-pulse" style="opacity: var(--mesh-opacity)"></div>
+    <div class="absolute w-[400px] h-[400px] bg-accent rounded-full blur-[100px] -bottom-20 -right-20 animate-pulse" style="opacity: var(--mesh-opacity); animation-delay: 1.5s"></div>
+
+    <div class="relative z-10 flex flex-col items-center text-center">
+        <div class="w-24 h-24 mb-10 reveal-1">
+            <div class="w-full h-full primary-gradient rounded-[2rem] flex items-center justify-center shadow-[0_0_50px_rgba(99,102,241,0.5)] rotate-12">
+                <span class="material-symbols-outlined text-on-surface text-5xl -rotate-12">videocam</span>
+            </div>
+        </div>
+
+        <h1 class="text-6xl font-black tracking-tighter mb-4 reveal-2 font-headline text-on-surface">Luminous</h1>
+        <p class="text-lg text-slate-400 max-w-xs mb-12 reveal-3 leading-relaxed">Meet beautiful strangers through high-quality video matching.</p>
+
+        <button id="splash-start-btn" class="group relative px-12 py-5 primary-gradient rounded-full text-white font-bold text-lg shadow-2xl hover:scale-105 active:scale-95 transition-all reveal-3">
+            <span>Get Started</span>
+            <div class="absolute inset-x-0 -bottom-2 h-4 bg-primary/20 blur-xl opacity-0 group-hover:opacity-100 transition-opacity"></div>
+        </button>
+        
+        <p class="mt-8 text-[10px] text-gray-500 uppercase tracking-widest font-bold">Luminous © 2026 • Premium Experiences</p>
+    </div>
+</main>
