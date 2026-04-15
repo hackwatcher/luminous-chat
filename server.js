@@ -170,8 +170,6 @@ function handleLeave(leavingSocket) {
  * Guarantees: no duplicate entries, no self-match, no ghost matches.
  */
 function enqueue(userSocket) {
-    console.log(`[🔎 Search] ${userSocket.anonId} (${userSocket.id}) starting match process...`);
-
     // Already matched → tear down first
     if (userSocket.currentRoom) handleLeave(userSocket);
 
@@ -181,28 +179,20 @@ function enqueue(userSocket) {
     // Tell the client to show Searching UI
     userSocket.emit('searching');
 
-    // Attempt to find a partner
-    const queueArray = Array.from(waitingQueue);
-    console.log(`[📊 Queue] Current size: ${queueArray.length}`);
-
-    for (const candidateId of queueArray) {
+    // Try to match immediately
+    for (const candidateId of waitingQueue) {
         if (candidateId === userSocket.id) continue;
 
         const partner = io.sockets.sockets.get(candidateId);
-        
         if (!partner || !partner.connected) {
-            console.log(`[🧹 Purge] Removing ghost/disconnected socket from queue: ${candidateId}`);
-            waitingQueue.delete(candidateId);
+            waitingQueue.delete(candidateId); // purge ghost
             continue;
         }
 
-        // Preference Check
-        const compatible = isCompatible(userSocket, partner);
-        console.log(`[⚖️ Check] ${userSocket.anonId} vs ${partner.anonId} -> Compatible: ${compatible}`);
+        // Check preference compatibility
+        if (!isCompatible(userSocket, partner)) continue;
 
-        if (!compatible) continue;
-
-        // MATCH FOUND!
+        // Found a live compatible partner → create room
         waitingQueue.delete(candidateId);
         const roomId = `room_${crypto.randomBytes(6).toString('hex')}`;
 
@@ -221,13 +211,13 @@ function enqueue(userSocket) {
             isInitiator   : false,
         });
 
-        console.log(`[✅ MATCHED] ${userSocket.anonId} ↔ ${partner.anonId} in ${roomId}`);
+        console.log(`[✓ Matched] ${userSocket.anonId} ↔ ${partner.anonId}  (${roomId})`);
         return;
     }
 
-    // No partner found -> join the queue
+    // No partner available → wait in queue
     waitingQueue.add(userSocket.id);
-    console.log(`[⏳ Queued] ${userSocket.anonId} is now waiting for a partner...`);
+    console.log(`[⏳ Queue]  ${userSocket.anonId} waiting  (queue=${waitingQueue.size})`);
 }
 
 // ═══════════════════════════════════════════════════════════════

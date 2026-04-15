@@ -9,21 +9,7 @@ const ASSETS = [
   '/style.css',
   '/script.js',
   '/icon.png',
-  '/manifest.json',
-  '/screens/splash.html',
-  '/screens/discover.html',
-  '/screens/matching.html',
-  '/screens/chat.html',
-  '/screens/profile.html',
-  '/screens/settings.html',
-  '/screens/inbox.html',
-  '/screens/history.html',
-  '/screens/rating.html',
-  '/screens/auth.html',
-  '/screens/chat_detail.html',
-  '/screens/onboarding.html',
-  '/screens/premium.html',
-  '/screens/admin.html'
+  '/manifest.json'
 ];
 
 self.addEventListener('install', (event) => {
