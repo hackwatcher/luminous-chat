@@ -12,6 +12,8 @@
 
     <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="manifest" href="/manifest.json"/>
+    <link rel="apple-touch-icon" href="/icon.png"/>
     <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
     <script>
         tailwind.config = {
@@ -211,5 +213,17 @@
 <script src="services/socket.js"></script>
 <script src="services/webrtc.js"></script>
 <script src="script.js"></script>
+    <!-- Registration for Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('PWA Service Worker registered');
+                }).catch(err => {
+                    console.log('PWA registration failed: ', err);
+                });
+            });
+        }
+    </script>
 </body>
 </html>
