@@ -273,8 +273,8 @@ class ScreenManager {
             const adminLink = document.getElementById('admin-link-container');
 
             if (back) back.onclick = () => this.switchScreen('discover');
-            if (logout) logout.onclick = () => { 
-                // Only clear active session, keep account memory for next login
+            if (logout) logout.onclick = async () => { 
+                try { await logout(); } catch(e) {}
                 localStorage.removeItem('luminous_user');
                 window.location.reload(); 
             };
@@ -838,31 +838,25 @@ const screenMgr = new ScreenManager('app-container');
 let localStream = null, isConnected = false, currentPartnerAnonId = '';
 
 async function initMedia() {
-    // Check for Ban Status - only ban users in the actual ban list
+    // Check for Ban Status only
     const user = JSON.parse(localStorage.getItem('luminous_user') || '{}');
     const bannedList = JSON.parse(localStorage.getItem('luminous_banned_list') || '[]');
     const isBanned = user.role !== 'admin' && user.name && bannedList.includes(user.name);
-    
     if (isBanned) {
         const overlay = document.getElementById('banned-overlay');
         if (overlay) overlay.classList.remove('hidden');
         return;
     }
 
-    // Show correct screen based on auth state
-    const savedUser = localStorage.getItem('luminous_user');
-    const startScreen = savedUser ? 'discover' : 'splash';
-    screenMgr.switchScreen(startScreen);
-
-    // Try to get camera in background (used when entering chat)
+    // Get camera in background - non-blocking
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         const lv = document.getElementById('local-video');
         if (lv) lv.srcObject = localStream;
     } catch (err) { 
         console.warn('[Media] Camera not available:', err.message);
-        // App continues without camera - it's only needed in chat
     }
+    // Screen routing is fully handled by watchAuthState below
 }
 
 function saveToInbox(partner, msg) {
@@ -923,28 +917,37 @@ watchAuthState(async (user) => {
         console.log("[Auth] User is logged in:", user.uid);
         let saved = JSON.parse(localStorage.getItem('luminous_user') || '{}');
         
-        // Try to recover from Cloud if local storage is empty
-        if (!saved.age) {
+        // Try to recover from Cloud Firestore if local is empty
+        if (!saved.age && !user.isAnonymous) {
             try {
                 const cloudProfile = await getUserProfile(user.uid);
                 if (cloudProfile) {
                     saved = cloudProfile;
                     localStorage.setItem('luminous_user', JSON.stringify(saved));
                 }
-            } catch (e) { console.error('[WatchAuth] Could not restore profile from cloud'); }
+            } catch (e) { console.error('[WatchAuth] Cloud restore failed'); }
         }
 
         const isProfileComplete = !!saved.age;
 
-        if (screenMgr.currentScreen === 'splash' || screenMgr.currentScreen === 'auth') {
+        // Only redirect if on an entry screen (not inside the app already)
+        if (screenMgr.currentScreen === 'splash' || screenMgr.currentScreen === 'auth' || screenMgr.currentScreen === null) {
             if (isProfileComplete) {
                 screenMgr.switchScreen('discover');
-            } else {
+            } else if (!user.isAnonymous) {
+                // Only go to onboarding for real (non-guest) users
                 screenMgr.switchScreen('onboarding');
+            } else {
+                // Anonymous/guest → show auth screen to encourage sign-up
+                screenMgr.switchScreen('splash');
             }
         }
     } else {
-        console.log("[Auth] User is logged out");
+        // User is fully logged out — show splash
+        console.log("[Auth] User is logged out — showing splash");
+        if (screenMgr.currentScreen === null || screenMgr.currentScreen === 'discover') {
+            screenMgr.switchScreen('splash');
+        }
     }
 });
 
