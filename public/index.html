@@ -62,6 +62,40 @@
         <!-- Remote Video (fills stage, hidden until matched) -->
         <video id="remote-video" autoplay playsinline></video>
 
+        <!-- Setup Overlay (User selects gender and preference) -->
+        <div id="setup-overlay" class="stage-overlay hidden">
+            <div class="searching-bg"></div>
+            <div class="relative z-10 w-[90%] max-w-sm">
+                <div class="bg-black/40 backdrop-blur-2xl border border-white/10 p-6 rounded-3xl text-center shadow-2xl">
+                    <div class="w-12 h-12 rounded-full gradient-cta mx-auto flex items-center justify-center mb-4">
+                        <span class="material-symbols-outlined text-white">person</span>
+                    </div>
+                    <h2 class="font-headline font-black text-white text-2xl tracking-tight mb-6">Who are you?</h2>
+                    
+                    <div class="mb-5 text-left">
+                        <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-wider mb-2 px-1">I am</label>
+                        <div class="flex gap-2">
+                            <button class="sel-btn flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold text-white/60 transition-all hover:bg-white/10 active:scale-95" data-group="my-gender" data-val="male">👦 Guy</button>
+                            <button class="sel-btn flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold text-white/60 transition-all hover:bg-white/10 active:scale-95" data-group="my-gender" data-val="female">👧 Girl</button>
+                        </div>
+                    </div>
+
+                    <div class="mb-6 text-left">
+                        <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-wider mb-2 px-1">Looking for</label>
+                        <div class="flex gap-2">
+                            <button class="sel-btn flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold text-white/60 transition-all hover:bg-white/10 active:scale-95" data-group="pref-gender" data-val="male">👦 Guys</button>
+                            <button class="sel-btn flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold text-white/60 transition-all hover:bg-white/10 active:scale-95" data-group="pref-gender" data-val="female">👧 Girls</button>
+                            <button class="sel-btn flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold text-white/60 transition-all hover:bg-white/10 active:scale-95" data-group="pref-gender" data-val="both">👽 Any</button>
+                        </div>
+                    </div>
+
+                    <button id="save-profile-btn" class="w-full bg-primary/20 text-primary border border-primary/30 py-3.5 rounded-xl font-headline font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                        CONTINUE
+                    </button>
+                </div>
+            </div>
+        </div>
+
         <!-- Searching Overlay (sits on top of video) -->
         <div id="searching-overlay" class="stage-overlay">
             <div class="searching-bg"></div>

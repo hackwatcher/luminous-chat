@@ -121,6 +121,19 @@ function dequeue(socketId) {
     waitingQueue.delete(socketId);
 }
 
+/** Check gender/preference compatibility between two sockets */
+function isCompatible(s1, s2) {
+    // If either is missing profile for some reason, allow match to prevent softlocks
+    if (!s1.gender || !s2.gender) return true;
+    
+    // Check if s1 wants s2
+    const match1 = (s1.pref === 'both' || s1.pref === s2.gender);
+    // Check if s2 wants s1
+    const match2 = (s2.pref === 'both' || s2.pref === s1.gender);
+    
+    return match1 && match2;
+}
+
 /**
  * Handle room teardown when one peer leaves.
  * Notifies the remaining peer and requeues them.
@@ -176,7 +189,10 @@ function enqueue(userSocket) {
             continue;
         }
 
-        // Found a live partner → create room
+        // Check preference compatibility
+        if (!isCompatible(userSocket, partner)) continue;
+
+        // Found a live compatible partner → create room
         waitingQueue.delete(candidateId);
         const roomId = `room_${crypto.randomBytes(6).toString('hex')}`;
 
@@ -227,6 +243,13 @@ io.on('connection', (socket) => {
 
     console.log(`[+ Connect] ${socket.id}  →  ${socket.anonId}`);
     socket.emit('your-id', socket.anonId);
+
+    // ── set-preferences ───────────────────────────────────────
+    socket.on('set-preferences', (prefs) => {
+        if (!prefs || !prefs.gender || !prefs.pref) return;
+        socket.gender = prefs.gender;
+        socket.pref   = prefs.pref;
+    });
 
     // ── start-search ──────────────────────────────────────────
     socket.on('start-search', () => {

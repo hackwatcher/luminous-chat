@@ -7,6 +7,8 @@
 const localVideo        = document.getElementById('local-video');
 const remoteVideo       = document.getElementById('remote-video');
 const searchingOverlay  = document.getElementById('searching-overlay');
+const setupOverlay      = document.getElementById('setup-overlay');
+const saveProfileBtn    = document.getElementById('save-profile-btn');
 const startBtn          = document.getElementById('start-btn');
 const overlayText       = document.getElementById('overlay-text');
 const overlaySub        = document.getElementById('overlay-sub');
@@ -40,6 +42,9 @@ let myAnonId             = '';
 let currentPartnerAnonId = '';
 let chatPlaceholderEl    = document.getElementById('chat-placeholder');
 const sentMessages       = new Set();
+
+/* ─── Profile State ────────────────────────────────────── */
+let myProfile = { gender: null, pref: null };
 
 /* ════════════════════════════════════════════════════════
    CHAT PANEL
@@ -159,8 +164,18 @@ async function initMedia() {
             audio: true,
         });
         localVideo.srcObject = localStream;
-        setOverlay('Camera ready', 'Tap START to find a stranger');
-        startBtn.classList.remove('hidden');
+        
+        // Show setup overlay if no profile, otherwise restore profile and show start state
+        const saved = localStorage.getItem('luminous_profile');
+        if (saved) {
+            myProfile = JSON.parse(saved);
+            socket.emit('set-preferences', myProfile);
+            setOverlay('Camera ready', 'Tap START to find a stranger');
+            startBtn.classList.remove('hidden');
+        } else {
+            setupOverlay.classList.remove('hidden');
+        }
+        
         setConnStatus(myAnonId || 'Online', 'green');
     } catch (err) {
         console.error('[Media]', err.name, err.message);
@@ -287,9 +302,45 @@ socket.on('chat-message', (text) => {
 });
 
 /* ════════════════════════════════════════════════════════
+   PROFILE SETUP
+════════════════════════════════════════════════════════ */
+document.querySelectorAll('.sel-btn').forEach(btn => {
+    btn.addEventListener('click', (e) => {
+        const group = btn.getAttribute('data-group');
+        const val   = btn.getAttribute('data-val');
+        
+        // Remove active class from others in same group
+        document.querySelectorAll(`.sel-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+
+        if (group === 'my-gender') myProfile.gender = val;
+        if (group === 'pref-gender') myProfile.pref = val;
+
+        saveProfileBtn.disabled = !(myProfile.gender && myProfile.pref);
+    });
+});
+
+if (saveProfileBtn) {
+    saveProfileBtn.addEventListener('click', () => {
+        localStorage.setItem('luminous_profile', JSON.stringify(myProfile));
+        socket.emit('set-preferences', myProfile);
+        setupOverlay.classList.add('hidden');
+        
+        // Immediately start searching if they just created profile
+        socket.emit('start-search');
+    });
+}
+
+/* ════════════════════════════════════════════════════════
    CONTROLS
 ════════════════════════════════════════════════════════ */
-startBtn.addEventListener('click', () => socket.emit('start-search'));
+startBtn.addEventListener('click', () => {
+    if (!myProfile.gender) {
+        setupOverlay.classList.remove('hidden');
+        return;
+    }
+    socket.emit('start-search');
+});
 nextBtn.addEventListener('click',  () => { closeChat(); socket.emit('next'); });
 
 reportBtn.addEventListener('click', () => {
