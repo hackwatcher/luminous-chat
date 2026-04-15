@@ -1,0 +1,17 @@
+# Bağımlılıklar
+node_modules/
+
+# Ortam değişkenleri (asla commit etme!)
+.env
+
+# Log dosyaları
+*.log
+npm-debug.log*
+
+# OS dosyaları
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/

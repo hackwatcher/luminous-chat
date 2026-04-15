@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+
+<html lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Luminous - Görüşme Sonu Değerlendirme</title>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-container": "#3b3cc9",
+                    "background": "#f7f9fb",
+                    "on-tertiary-fixed-variant": "#4b546d",
+                    "surface-container-high": "#e1e9ee",
+                    "primary-fixed-dim": "#d1d0ff",
+                    "secondary-fixed-dim": "#c6d6ec",
+                    "primary-fixed": "#e1e0ff",
+                    "outline-variant": "#a9b4b9",
+                    "primary-container": "#e1e0ff",
+                    "inverse-on-surface": "#9a9d9f",
+                    "tertiary": "#565f78",
+                    "surface-container": "#e8eff3",
+                    "on-error": "#fff7f7",
+                    "inverse-surface": "#0b0f10",
+                    "secondary-container": "#d4e4fa",
+                    "on-secondary-fixed": "#324052",
+                    "tertiary-fixed": "#ced6f5",
+                    "on-surface-variant": "#566166",
+                    "surface": "#f7f9fb",
+                    "error-container": "#ff8b9a",
+                    "on-background": "#2a3439",
+                    "surface-bright": "#f7f9fb",
+                    "tertiary-fixed-dim": "#c0c9e6",
+                    "on-tertiary-container": "#424a63",
+                    "on-surface": "#2a3439",
+                    "tertiary-dim": "#4a536b",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-variant": "#d9e4ea",
+                    "surface-container-highest": "#d9e4ea",
+                    "outline": "#717c82",
+                    "on-secondary-container": "#445365",
+                    "error-dim": "#4f0116",
+                    "error": "#9e3f4e",
+                    "primary-dim": "#3c3dca",
+                    "tertiary-container": "#ced6f5",
+                    "surface-container-low": "#f0f4f7",
+                    "on-primary-fixed-variant": "#4647d3",
+                    "secondary-fixed": "#d4e4fa",
+                    "secondary-dim": "#465467",
+                    "on-tertiary": "#f9f8ff",
+                    "on-secondary-fixed-variant": "#4e5d6f",
+                    "primary": "#494bd6",
+                    "on-error-container": "#782232",
+                    "on-tertiary-fixed": "#2f384f",
+                    "on-primary": "#faf6ff",
+                    "surface-dim": "#cfdce3",
+                    "surface-tint": "#494bd6",
+                    "on-secondary": "#f7f9ff",
+                    "on-primary-fixed": "#2622b7",
+                    "inverse-primary": "#8083ff",
+                    "secondary": "#526073"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        body { font-family: 'Inter', sans-serif; }
+        h1, h2, h3 { font-family: 'Manrope', sans-serif; }
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background min-h-screen flex flex-col overflow-hidden">
+<!-- TopAppBar -->
+<nav class="w-full top-0 px-6 py-4 flex justify-between items-center bg-[#f7f9fb] dark:bg-slate-950">
+<div class="flex items-center gap-2">
+<span class="material-symbols-outlined text-[#6366F1] dark:text-[#818cf8]" data-icon="videocam">videocam</span>
+<span class="text-xl font-bold tracking-tight text-[#2a3439] dark:text-white font-manrope">Luminous</span>
+</div>
+<button class="material-symbols-outlined text-[#2a3439] dark:text-slate-400 hover:bg-[#e1e9ee] p-2 rounded-full transition-colors" data-icon="settings">settings</button>
+</nav>
+<!-- Content Canvas -->
+<main class="flex-grow flex items-center justify-center p-4 relative">
+<!-- Ambient Background Decoration -->
+<div class="absolute inset-0 z-0 opacity-40">
+<div class="absolute top-[10%] left-[15%] w-64 h-64 bg-primary-container rounded-full blur-[100px]"></div>
+<div class="absolute bottom-[20%] right-[10%] w-80 h-80 bg-secondary-container rounded-full blur-[120px]"></div>
+</div>
+<!-- Evaluation Card -->
+<div class="z-10 w-full max-w-md bg-surface-container-lowest rounded-[2rem] p-10 flex flex-col items-center text-center shadow-[0px_12px_32px_rgba(42,52,57,0.06)]">
+<!-- Icon/Visual Header -->
+<div class="mb-8 p-4 bg-primary-container rounded-full">
+<span class="material-symbols-outlined text-primary text-4xl" data-icon="sentiment_very_satisfied" style="font-variation-settings: 'FILL' 1;">sentiment_very_satisfied</span>
+</div>
+<!-- Question -->
+<h1 class="text-3xl font-extrabold tracking-tight text-on-surface mb-3">Görüşme nasıl geçti?</h1>
+<p class="text-on-surface-variant font-body text-sm mb-10 leading-relaxed">Geri bildiriminiz bizim için çok değerli. Hizmet kalitemizi artırmamıza yardımcı olun.</p>
+<!-- Reaction Icons (Luminous Style) -->
+<div class="flex justify-between w-full mb-12 px-2">
+<button class="group flex flex-col items-center gap-3 transition-all active:scale-95">
+<div class="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center group-hover:bg-error-container group-hover:text-on-error-container transition-colors">
+<span class="material-symbols-outlined text-3xl" data-icon="sentiment_dissatisfied">sentiment_dissatisfied</span>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant group-hover:text-error">Kötü</span>
+</button>
+<button class="group flex flex-col items-center gap-3 transition-all active:scale-95">
+<div class="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center group-hover:bg-tertiary-container group-hover:text-on-tertiary-container transition-colors">
+<span class="material-symbols-outlined text-3xl" data-icon="sentiment_neutral">sentiment_neutral</span>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant group-hover:text-tertiary">Normal</span>
+</button>
+<button class="group flex flex-col items-center gap-3 transition-all active:scale-95">
+<div class="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl" data-icon="sentiment_satisfied">sentiment_satisfied</span>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant group-hover:text-primary">İyi</span>
+</button>
+<button class="group flex flex-col items-center gap-3 transition-all active:scale-95">
+<div class="w-14 h-14 rounded-2xl bg-surface-container-low flex items-center justify-center group-hover:bg-primary-container group-hover:text-on-primary-container transition-colors">
+<span class="material-symbols-outlined text-3xl" data-icon="sentiment_very_satisfied">sentiment_very_satisfied</span>
+</div>
+<span class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant group-hover:text-primary">Harika</span>
+</button>
+</div>
+<!-- Submit Button (Jewel CTA) -->
+<a class="w-full py-4 rounded-full bg-gradient-to-br from-primary to-primary-dim text-white font-semibold text-base shadow-lg shadow-primary/20 hover:shadow-primary/30 transition-shadow active:scale-95 duration-150 inline-flex justify-center items-center" href="{{DATA:SCREEN:SCREEN_14}}">
+                Bitti
+            </a>
+<a class="mt-6 text-on-surface-variant text-sm font-medium hover:text-on-surface transition-colors" href="{{DATA:SCREEN:SCREEN_14}}">
+                Daha sonra değerlendir
+            </a>
+</div>
+</main>
+<!-- Decorative Bottom Canvas -->
+<div class="h-16 w-full bg-surface-container-low/50 backdrop-blur-sm flex items-center justify-center">
+<p class="text-[10px] font-bold uppercase tracking-widest text-on-surface-variant">Luminous • Premium Video Experiences</p>
+</div>
+<!-- Background Images for Visual Context -->
+<div class="hidden">
+<img data-alt="abstract soft gradient flowing from clean white to pale lavender with organic shapes and 24px backdrop blur" src="https://lh3.googleusercontent.com/aida-public/AB6AXuD1EHbjqq5LH4nYBGl0zw3l5EhbXhB4HcyGR8EG3Fp9f2nrBQPHq_frqjqWM-w8dTROXa-_DEMUfdaOMceUEIaIik5thE3YP2VJRbLU5pxSrge_kU-JwoWIebwZdkFSDplT31SO1v1JmPysJn1wQVemvANEctnNQ6Ab2rjhoCHRQM3Mf7xDTr88ZrIhLCU16pP4Im0NjfN0pm5VBEbgXgTlmE9ZKHmW6LJCbhOAGf9vDUH3lFctaASLfpzESqONdtBYvDt-hohqOm_9"/>
+<img data-alt="minimalist clean office interior with soft natural sunlight through floor to ceiling windows and soft focus depth" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDNiMIjfVJwj9WfSmft4og5ySd51kmo5yi3nS30GNxp4ZxBDLv_EARxuAu3FqX7c44BbT-S9GAmEiaOAMi-Zc1qRGeuTDvkqaJlRA3_H5c_kpuitk7OX6XK1eo9d7-Mvyp0tTh1HM38vMolBUCAl9FPOjH8iTC5ZTD6oAhCVSxH-pOF-wzHkLzj25R22Sad1BkxvfqqC6CSdsDrmk6I4dwLLivkI0OajEYM-sENGHKCs6wfowT0AAQG2bUU1x27cs6Edlko2IJEaxee"/>
+</div>
+</body></html>

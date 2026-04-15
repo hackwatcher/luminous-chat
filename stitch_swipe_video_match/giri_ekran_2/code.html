@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+
+<html class="light" lang="tr"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<title>Luminous - Hoş Geldiniz</title>
+<!-- Material Symbols -->
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<!-- Google Fonts: Manrope & Inter -->
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&amp;family=Manrope:wght@700;800&amp;display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "on-primary-container": "#3b3cc9",
+                    "background": "#f7f9fb",
+                    "on-tertiary-fixed-variant": "#4b546d",
+                    "surface-container-high": "#e1e9ee",
+                    "primary-fixed-dim": "#d1d0ff",
+                    "secondary-fixed-dim": "#c6d6ec",
+                    "primary-fixed": "#e1e0ff",
+                    "outline-variant": "#a9b4b9",
+                    "primary-container": "#e1e0ff",
+                    "inverse-on-surface": "#9a9d9f",
+                    "tertiary": "#565f78",
+                    "surface-container": "#e8eff3",
+                    "on-error": "#fff7f7",
+                    "inverse-surface": "#0b0f10",
+                    "secondary-container": "#d4e4fa",
+                    "on-secondary-fixed": "#324052",
+                    "tertiary-fixed": "#ced6f5",
+                    "on-surface-variant": "#566166",
+                    "surface": "#f7f9fb",
+                    "error-container": "#ff8b9a",
+                    "on-background": "#2a3439",
+                    "surface-bright": "#f7f9fb",
+                    "tertiary-fixed-dim": "#c0c9e6",
+                    "on-tertiary-container": "#424a63",
+                    "on-surface": "#2a3439",
+                    "tertiary-dim": "#4a536b",
+                    "surface-container-lowest": "#ffffff",
+                    "surface-variant": "#d9e4ea",
+                    "surface-container-highest": "#d9e4ea",
+                    "outline": "#717c82",
+                    "on-secondary-container": "#445365",
+                    "error-dim": "#4f0116",
+                    "error": "#9e3f4e",
+                    "primary-dim": "#3c3dca",
+                    "tertiary-container": "#ced6f5",
+                    "surface-container-low": "#f0f4f7",
+                    "on-primary-fixed-variant": "#4647d3",
+                    "secondary-fixed": "#d4e4fa",
+                    "secondary-dim": "#465467",
+                    "on-tertiary": "#f9f8ff",
+                    "on-secondary-fixed-variant": "#4e5d6f",
+                    "primary": "#494bd6",
+                    "on-error-container": "#782232",
+                    "on-tertiary-fixed": "#2f384f",
+                    "on-primary": "#faf6ff",
+                    "surface-dim": "#cfdce3",
+                    "surface-tint": "#494bd6",
+                    "on-secondary": "#f7f9ff",
+                    "on-primary-fixed": "#2622b7",
+                    "inverse-primary": "#8083ff",
+                    "secondary": "#526073"
+            },
+            "borderRadius": {
+                    "DEFAULT": "0.25rem",
+                    "lg": "0.5rem",
+                    "xl": "0.75rem",
+                    "full": "9999px"
+            },
+            "fontFamily": {
+                    "headline": ["Manrope"],
+                    "body": ["Inter"],
+                    "label": ["Inter"]
+            }
+          },
+        },
+      }
+    </script>
+<style>
+        .glass-panel {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(24px);
+            -webkit-backdrop-filter: blur(24px);
+        }
+        .primary-gradient {
+            background: linear-gradient(135deg, #494bd6 0%, #3c3dca 100%);
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f7f9fb;
+        }
+    </style>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+</head>
+<body class="bg-background text-on-background selection:bg-primary-container selection:text-on-primary-container overflow-hidden">
+<!-- Splash Screen Wrapper -->
+<main class="relative h-screen w-full flex flex-col items-center justify-between py-24 px-8 overflow-hidden">
+<!-- Subtle Ambient Background Element -->
+<div class="absolute inset-0 z-0 flex items-center justify-center opacity-40 pointer-events-none">
+<div class="w-[800px] h-[800px] rounded-full bg-gradient-to-tr from-primary-container/20 via-surface-container-low/30 to-transparent blur-3xl"></div>
+</div>
+<!-- Empty Top Space for Balance -->
+<div class="z-10 h-12"></div>
+<!-- Logo Section -->
+<div class="z-10 flex flex-col items-center space-y-6">
+<!-- Icon Identity -->
+<div class="w-20 h-20 primary-gradient rounded-[2rem] flex items-center justify-center shadow-[0px_12px_32px_rgba(42,52,57,0.06)] transform hover:scale-105 transition-transform duration-500">
+<span class="material-symbols-outlined text-white text-4xl" data-icon="videocam">videocam</span>
+</div>
+<!-- Brand Headline -->
+<div class="text-center">
+<h1 class="font-headline font-extrabold text-5xl tracking-tight text-on-background">
+                    Luminous
+                </h1>
+<p class="font-body text-on-surface-variant mt-3 text-lg font-normal tracking-tight">
+                    Işık hızında, tertemiz bağlantılar.
+                </p>
+</div>
+</div>
+<!-- Action Section -->
+<div class="z-10 w-full max-w-sm flex flex-col items-center gap-8">
+<!-- Main Button -->
+<button class="group w-full py-5 px-10 primary-gradient text-white rounded-full font-headline font-bold text-xl shadow-[0px_12px_32px_rgba(73,75,214,0.2)] hover:shadow-[0px_16px_40px_rgba(73,75,214,0.3)] transform hover:-translate-y-1 active:scale-95 transition-all duration-300 flex items-center justify-center gap-3" onclick="window.location.href='#'">
+<span>Sohbete Başla</span>
+<span class="material-symbols-outlined transform group-hover:translate-x-1 transition-transform" data-icon="arrow_forward">arrow_forward</span>
+</button>
+<!-- Subtle Metadata / Language Footer -->
+<div class="flex items-center gap-4 text-on-surface-variant/60 font-label text-[10px] uppercase tracking-widest font-semibold">
+<span>Versiyon 2.0</span>
+<div class="w-1 h-1 rounded-full bg-outline-variant/40"></div>
+<span>Güvenli Bağlantı</span>
+</div>
+</div>
+<!-- Decorative Foreground Elements -->
+<div class="absolute bottom-[-10%] left-[-10%] w-64 h-64 bg-surface-container-high/40 rounded-full blur-2xl z-0"></div>
+<div class="absolute top-[10%] right-[-5%] w-48 h-48 bg-primary-container/10 rounded-full blur-2xl z-0"></div>
+</main>
+<!-- Background Images for Depth (Off-canvas or subtle opacity) -->
+<div class="fixed inset-0 pointer-events-none -z-10 opacity-5">
+<img class="w-full h-full object-cover" data-alt="Minimalist abstract flowing waves of white silk and light shadows with a clean aesthetic" src="https://lh3.googleusercontent.com/aida-public/AB6AXuBSj0jaauh4Rde07V3Bd_R1j92x9qBvpPf3UEPcunkLFHBJxpha3VF0--WrtmwZTqOPJGsSzY_E47C3pnV_1CgGygycxJGlX9oG9bLBvWp5uXK4auTeusAZgZbcbZvQ3Ia6nrRtgX4ProYhblQFqYQa1NAsQCignOP48NQhE4RPgt68HZtDlHorFlA2EXVWn6KiM0p6wlZ9HQnQj8ZzPJONoBOpjnwnbXYUZL_AitnXI06JU4-nH8B2lEXqKtrRL548GjPmKI8fwb3s"/>
+</div>
+</body></html>

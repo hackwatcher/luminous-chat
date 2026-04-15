@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+
+<html class="dark" lang="en"><head>
+<meta charset="utf-8"/>
+<meta content="width=device-width, initial-scale=1.0" name="viewport"/>
+<script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&amp;family=Inter:wght@400;500;600&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&amp;display=swap" rel="stylesheet"/>
+<style>
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #050f1c;
+        }
+        .font-headline {
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+        .material-symbols-outlined {
+            font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
+        }
+    </style>
+<script id="tailwind-config">
+      tailwind.config = {
+        darkMode: "class",
+        theme: {
+          extend: {
+            "colors": {
+                    "secondary-fixed": "#ffc885",
+                    "secondary-dim": "#e79400",
+                    "on-tertiary": "#6a0934",
+                    "on-secondary-fixed-variant": "#724700",
+                    "primary": "#ba9eff",
+                    "surface-container-low": "#081422",
+                    "on-primary-fixed-variant": "#370086",
+                    "on-secondary": "#4a2c00",
+                    "inverse-primary": "#6e3bd7",
+                    "on-primary-fixed": "#000000",
+                    "secondary": "#f8a010",
+                    "on-error-container": "#ffb2b9",
+                    "on-tertiary-fixed": "#380018",
+                    "on-primary": "#39008c",
+                    "surface-dim": "#050f1c",
+                    "surface-tint": "#ba9eff",
+                    "surface-container-lowest": "#000000",
+                    "surface-variant": "#18263a",
+                    "surface-container-highest": "#18263a",
+                    "outline": "#6c7687",
+                    "on-surface": "#dce6f9",
+                    "tertiary-dim": "#f0779d",
+                    "error-dim": "#d73357",
+                    "error": "#ff6e84",
+                    "primary-dim": "#8455ef",
+                    "tertiary-container": "#fd81a8",
+                    "on-secondary-container": "#fff6f0",
+                    "on-surface-variant": "#a1acbe",
+                    "tertiary-fixed": "#ff8eb0",
+                    "inverse-surface": "#f8f9ff",
+                    "secondary-container": "#855300",
+                    "on-secondary-fixed": "#4c2e00",
+                    "on-background": "#dce6f9",
+                    "surface-bright": "#1d2d42",
+                    "on-tertiary-container": "#59002a",
+                    "tertiary-fixed-dim": "#f67ca3",
+                    "surface": "#050f1c",
+                    "error-container": "#a70138",
+                    "primary-fixed-dim": "#a27cff",
+                    "on-primary-container": "#2b006e",
+                    "background": "#050f1c",
+                    "on-tertiary-fixed-variant": "#701039",
+                    "surface-container-high": "#122032",
+                    "on-error": "#490013",
+                    "outline-variant": "#3e4958",
+                    "primary-fixed": "#ae8dff",
+                    "secondary-fixed-dim": "#ffb554",
+                    "inverse-on-surface": "#4c5665",
+                    "primary-container": "#ae8dff",
+                    "tertiary": "#ff97b5",
+                    "surface-container": "#0d1a2a"
+            },
+            "borderRadius": {
+                    "DEFAULT": "1rem",
+                    "lg": "2rem",
+                    "xl": "3rem",
+                    "full": "9999px"
+            }
+          },
+        },
+      }
+    </script>
+<style>
+    body {
+      min-height: max(884px, 100dvh);
+    }
+  </style>
+  </head>
+<body class="bg-surface text-on-surface min-h-screen overflow-hidden select-none">
+<!-- Top Navigation Shell -->
+<header class="fixed top-0 w-full z-50 flex justify-between items-center px-6 py-4 w-full no-border bg-gradient-to-b from-[#050f1c] to-transparent">
+<div class="flex items-center gap-3">
+<div class="w-10 h-10 rounded-full bg-surface-container-highest overflow-hidden ring-2 ring-primary/20">
+<img alt="User Profile" class="w-full h-full object-cover" data-alt="close up headshot of a stylish young man with warm lighting and a neutral studio background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuAF4crRiwXkEjE8dImEIQZ2IhzD30BuqsO7CcwPr_gg1jqLdi2m4LJdeJcQj8d9rg24ppXSX2ByLzQmqTK6J1ZGUHIGyQNGayVORl9mBUbWnkD9UVFws1TaP3_OqFXOqmhhiPatGX5SPvlj7sBtWtc_JUAySK5QIyeMjKLVgwqaQBvvKn5nLoEVS7RsboNnDqQwd4YSJQLcCzYyqLarOZwUFmmaJPfKZm5fYwDXZF2DAzkhc9okRJ08XknED0LOyx2DkkzwAUtEmnRc"/>
+</div>
+<h1 class="text-2xl font-bold tracking-tighter text-transparent bg-clip-text bg-gradient-to-r from-[#ba9eff] to-[#ff97b5] font-headline">Pulse</h1>
+</div>
+<div class="flex items-center gap-4">
+<div class="flex items-center gap-2 bg-surface-container/60 backdrop-blur-md px-4 py-1.5 rounded-full border border-outline-variant/10">
+<span class="w-2 h-2 rounded-full bg-secondary shadow-[0_0_10px_#f8a010] animate-pulse"></span>
+<span class="text-[10px] font-bold tracking-widest uppercase text-on-surface-variant">Live: 12.4k</span>
+</div>
+<button class="text-slate-400 hover:opacity-80 transition-opacity scale-95 active:scale-90 transition-transform">
+<span class="material-symbols-outlined">settings</span>
+</button>
+</div>
+</header>
+<main class="relative h-screen w-full flex flex-col">
+<!-- Remote Video Feed (Main Canvas) -->
+<section class="absolute inset-0 z-0">
+<img alt="Remote User" class="w-full h-screen object-cover" data-alt="candid cinematic portrait of a cool young woman laughing in a room lit by colorful neon purple and pink lights" src="https://lh3.googleusercontent.com/aida-public/AB6AXuDEw9KXmN7JV6F0KKkviUsztmnS9EHy7oMmtHDCmboh-kF9jLzLvQcSph1Lxisp3EaTEFmDZ3t2jdFSjvhK_ExIuSjzXDSUTBgfE4wmsNjednSbztMxnbJOn6QbjtUR8s2L0iU35fJHaHUe5kgPr-BXolbkACInW8Zwl6kjzyb_sHY3uUQ4Klf7f0EqYKXFP7gKA0ZLLl1K8ezHiOszI_LorwPazzYUlKenD5dC2AzurcG97wUXqqLlVMHQpFazjTdaOZy8MCNErb5S"/>
+<!-- Visual Overlay: Glass Texture & Gradient -->
+<div class="absolute inset-0 bg-gradient-to-t from-surface-container-lowest via-transparent to-transparent opacity-60"></div>
+<!-- Metadata Overlay -->
+<div class="absolute bottom-40 left-8 max-w-md space-y-4">
+<div class="flex flex-wrap gap-2">
+<span class="px-3 py-1 rounded-md bg-surface-container/70 backdrop-blur-xl text-on-surface-variant text-[10px] font-bold uppercase tracking-widest">Interests</span>
+<span class="px-3 py-1 rounded-md bg-primary/20 backdrop-blur-xl text-primary text-[10px] font-bold uppercase tracking-widest border border-primary/20">Digital Art</span>
+<span class="px-3 py-1 rounded-md bg-primary/20 backdrop-blur-xl text-primary text-[10px] font-bold uppercase tracking-widest border border-primary/20">Techno</span>
+<span class="px-3 py-1 rounded-md bg-primary/20 backdrop-blur-xl text-primary text-[10px] font-bold uppercase tracking-widest border border-primary/20">Travel</span>
+</div>
+<div class="space-y-1">
+<div class="flex items-end gap-3">
+<h2 class="text-4xl font-extrabold tracking-tight font-headline text-on-surface leading-none">Maya, 23</h2>
+<span class="text-on-surface-variant label-sm mb-1">Barcelona, ES</span>
+</div>
+<p class="text-on-surface-variant font-body text-lg italic opacity-90">"Looking for someone to talk about the latest boiler room set."</p>
+</div>
+</div>
+</section>
+<!-- Current User Video Preview (Asymmetric Float) -->
+<div class="absolute bottom-36 right-8 w-40 h-56 rounded-xl overflow-hidden ring-4 ring-surface-container-highest shadow-2xl z-20 group transform rotate-2 hover:rotate-0 transition-transform duration-500">
+<img alt="Self Preview" class="w-full h-full object-cover grayscale group-hover:grayscale-0 transition-all duration-700" data-alt="first-person perspective view of a young man smiling at the camera in a dimly lit room with a single blue light source" src="https://lh3.googleusercontent.com/aida-public/AB6AXuCc4TlYE2QxH0MOth32oOQdOAXJfH47Jc0ccwyAegwQs0kzvwNrRis3y5J-LQRKED50lhJkibEDWK_OwbNpiTedVLx6kiGwaqUWXhpDj6oGnDJP5c4EuvpmI5oHITmj-k3dOQpZ4zYcu972wccPOOzlj2ty50W5ib7H6kq2nt8HVugzE9FXkoeK3Tu0PFrDQxfYZZoBTlZrPC0U5QZxfoCt3crrbfM5F4wY7GpJOjMlRDy9zKv_ljGzZvnIJTJiVxB1Rw7ibhxT-9XG"/>
+<div class="absolute top-2 left-2 flex items-center gap-1 bg-black/40 backdrop-blur-sm px-2 py-0.5 rounded-full">
+<span class="w-1.5 h-1.5 rounded-full bg-error animate-pulse"></span>
+<span class="text-[8px] font-bold uppercase tracking-tighter text-white">REC</span>
+</div>
+</div>
+<!-- Controls Dock -->
+<div class="absolute bottom-10 left-1/2 -translate-x-1/2 z-30 w-full max-w-xl px-6">
+<div class="bg-surface-container-low/70 backdrop-blur-2xl rounded-full p-4 flex items-center justify-between shadow-[0_8px_40px_rgba(0,0,0,0.5)] border border-outline-variant/10">
+<!-- End Call -->
+<button class="w-14 h-14 rounded-full flex items-center justify-center bg-error-container text-on-error hover:bg-error-dim transition-colors group">
+<span class="material-symbols-outlined transition-transform group-active:scale-90" style="font-variation-settings: 'FILL' 1;">call_end</span>
+</button>
+<!-- Center Controls: Mute/Video Toggle -->
+<div class="flex items-center gap-4">
+<button class="w-12 h-12 rounded-full flex items-center justify-center bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">mic_off</span>
+</button>
+<button class="w-12 h-12 rounded-full flex items-center justify-center bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">videocam</span>
+</button>
+<button class="w-12 h-12 rounded-full flex items-center justify-center bg-surface-container-highest text-on-surface-variant hover:text-primary transition-colors">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+</div>
+<!-- Next User -->
+<button class="h-14 px-8 rounded-full flex items-center gap-3 bg-gradient-to-r from-primary to-primary-dim text-on-primary font-bold tracking-tight hover:shadow-[0_0_30px_rgba(186,158,255,0.4)] transition-all active:scale-95">
+<span class="font-headline">NEXT</span>
+<span class="material-symbols-outlined">fast_forward</span>
+</button>
+</div>
+</div>
+<!-- Bottom Navigation Shell (JSON Defined) -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-8 pt-4 bg-[#050f1c]/70 backdrop-blur-xl rounded-t-[3rem] shadow-[0_-8px_30px_rgba(110,59,215,0.1)]">
+<button class="flex flex-col items-center justify-center text-slate-500 p-4 hover:text-[#ba9eff] transition-colors scale-110 duration-300 ease-out">
+<span class="material-symbols-outlined">style</span>
+</button>
+<button class="flex flex-col items-center justify-center bg-gradient-to-br from-[#ba9eff] to-[#6e3bd7] text-white rounded-full p-4 shadow-[0_0_20px_rgba(186,158,255,0.4)] scale-110 duration-300 ease-out">
+<span class="material-symbols-outlined" style="font-variation-settings: 'FILL' 1;">videocam</span>
+</button>
+<button class="flex flex-col items-center justify-center text-slate-500 p-4 hover:text-[#ba9eff] transition-colors scale-110 duration-300 ease-out">
+<span class="material-symbols-outlined">chat_bubble</span>
+</button>
+</nav>
+</main>
+<!-- Floating Spark Notification -->
+<div class="fixed top-24 right-6 z-40 transform -rotate-1">
+<div class="bg-secondary-container/90 backdrop-blur-lg border border-secondary/20 p-4 rounded-lg flex items-center gap-4 shadow-xl">
+<div class="relative">
+<div class="absolute -inset-1 bg-secondary rounded-full blur opacity-40 animate-pulse"></div>
+<img alt="Notification" class="relative w-10 h-10 rounded-full object-cover" data-alt="vibrant portrait of a woman with red hair looking into the distance with blue sky background" src="https://lh3.googleusercontent.com/aida-public/AB6AXuA-u1liznSSSkxPYFw2zQ03ZQwFoHUuZXVbaMR2JoHG9zOwqY7w9Kl67oTbeiUgQ4gvR2cWCe3iZ-RiyO2hT1pvJtNsT1RjCzmPO802UDpdJzxUE48KVbEbFANKKtNgyE1VigRcmshb4fckpdQRRHrEGWeVfNIi_50Jq-nBX8_rGvNgmKXWFgsP87ujj4oaxa-8rv46c-DWfR-EfYceVVraJn6YtJhWJtLLEFo870QS26nRq6frOWb8zKFbwXAHL8CHbuXPa-EhubcF"/>
+</div>
+<div>
+<p class="text-[10px] font-bold text-secondary uppercase tracking-widest leading-none">New Match Spark</p>
+<p class="text-on-surface font-headline font-bold text-sm">Sophie is nearby</p>
+</div>
+</div>
+</div>
+</body></html>

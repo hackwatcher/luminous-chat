@@ -1,0 +1,12 @@
+services:
+  - type: web
+    name: luminous-chat
+    env: node
+    buildCommand: npm install
+    startCommand: node server.js
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: ALLOWED_ORIGINS
+        # Deploy sonrası Render'ın verdiği URL'yi buraya girin
+        value: https://luminous-chat.onrender.com
