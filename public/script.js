@@ -1,41 +1,41 @@
 /* ════════════════════════════════════════════════════════════
-   script.js  —  Main Application Controller (Mobile-First)
+   script.js  —  Main Application Controller
 ════════════════════════════════════════════════════════════ */
 'use strict';
 
-/* ─── DOM References ───────────────────────────────────── */
-const localVideo       = document.getElementById('local-video');
-const remoteVideo      = document.getElementById('remote-video');
-const searchingOverlay = document.getElementById('searching-overlay');
-const startBtn         = document.getElementById('start-btn');
-const overlayText      = document.getElementById('overlay-text');
-const overlaySub       = document.getElementById('overlay-sub');
-const liveTag          = document.getElementById('live-tag');
-const nextBtn          = document.getElementById('next-btn');
-const reportBtn        = document.getElementById('report-btn');
-const bannedOverlay    = document.getElementById('banned-overlay');
-const banTimeText      = document.getElementById('ban-time');
-const chatMessages     = document.getElementById('chat-messages');
-const chatForm         = document.getElementById('chat-form');
-const chatInput        = document.getElementById('chat-input');
-const chatSubmit       = document.getElementById('chat-submit');
-const connStatus       = document.getElementById('connection-status');
-const connDot          = document.getElementById('conn-dot');
-const chatStatusDot    = document.getElementById('chat-status-dot');
-const chatStatusDotD   = document.getElementById('chat-status-dot-desk');
-const chatPartnerName  = document.getElementById('chat-partner-name');
-const chatPartnerNameD = document.getElementById('chat-partner-name-desk');
-const partnerIdTag     = document.getElementById('partner-id-tag');
-const partnerIdText    = document.getElementById('partner-id-text');
-const myAnonLabel      = document.getElementById('my-anon-id');
-const chatSheet        = document.getElementById('chat-sheet');
-const chatHandle       = document.getElementById('chat-handle');
-const chatToggleBtn    = document.getElementById('chat-toggle-btn');
-const chatBadge        = document.getElementById('chat-badge');
-const pipContainer     = document.getElementById('pip-container');
-const reportSep        = document.querySelectorAll('.report-sep');
+/* ─── DOM ──────────────────────────────────────────────── */
+const localVideo        = document.getElementById('local-video');
+const remoteVideo       = document.getElementById('remote-video');
+const searchingOverlay  = document.getElementById('searching-overlay');
+const startBtn          = document.getElementById('start-btn');
+const overlayText       = document.getElementById('overlay-text');
+const overlaySub        = document.getElementById('overlay-sub');
+const liveTag           = document.getElementById('live-tag');
+const nextBtn           = document.getElementById('next-btn');
+const reportBtn         = document.getElementById('report-btn');
+const bannedOverlay     = document.getElementById('banned-overlay');
+const banTimeText       = document.getElementById('ban-time');
+const chatMessages      = document.getElementById('chat-messages');
+const chatForm          = document.getElementById('chat-form');
+const chatInput         = document.getElementById('chat-input');
+const chatSubmit        = document.getElementById('chat-submit');
+const connStatus        = document.getElementById('connection-status');
+const connDot           = document.getElementById('conn-dot');
+const chatStatusDot     = document.getElementById('chat-status-dot');
+const chatStatusDotD    = document.getElementById('chat-status-dot-desk');
+const chatPartnerName   = document.getElementById('chat-partner-name');
+const chatPartnerNameD  = document.getElementById('chat-partner-name-desk');
+const partnerIdTag      = document.getElementById('partner-id-tag');
+const partnerIdText     = document.getElementById('partner-id-text');
+const myAnonLabel       = document.getElementById('my-anon-id');
+const chatPanel         = document.getElementById('chat-panel');
+const chatHandle        = document.getElementById('chat-handle');
+const chatToggleBtn     = document.getElementById('chat-toggle-btn');
+const chatBadge         = document.getElementById('chat-badge');
+const pipContainer      = document.getElementById('pip-container');
+const reportSeps        = document.querySelectorAll('.report-sep');
 
-/* ─── App State ────────────────────────────────────────── */
+/* ─── State ────────────────────────────────────────────── */
 let localStream          = null;
 let isConnected          = false;
 let myAnonId             = '';
@@ -43,122 +43,116 @@ let currentPartnerAnonId = '';
 let chatPlaceholderEl    = document.getElementById('chat-placeholder');
 const sentMessages       = new Set();
 
-/* ─── Chat Sheet State ─────────────────────────────────── */
-let chatOpen       = false;
-let unreadCount    = 0;
+/* ─── Is mobile? ───────────────────────────────────────── */
+const isMobile = () => window.innerWidth < 768;
 
 /* ════════════════════════════════════════════════════════
-   CHAT BOTTOM SHEET (mobile swipe-up)
+   CHAT PANEL  (collapsible on mobile, always open on desktop)
 ════════════════════════════════════════════════════════ */
+let chatOpen = false;
+let unreadCount = 0;
+
 function openChat() {
+    if (!isMobile()) return; // desktop: always open
     chatOpen = true;
-    chatSheet.classList.add('open');
-    chatSheet.style.transform = 'translateY(0)';
+    chatPanel.classList.add('open');
     unreadCount = 0;
-    chatBadge.classList.add('hidden');
-    chatBadge.innerText = '!';
-    // Scroll to bottom
-    setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 50);
+    if (chatBadge) { chatBadge.classList.add('hidden'); chatBadge.innerText = '!'; }
+    setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 60);
 }
 
 function closeChat() {
+    if (!isMobile()) return;
     chatOpen = false;
-    chatSheet.classList.remove('open');
-    chatSheet.style.transform = '';
+    chatPanel.classList.remove('open');
 }
 
-function toggleChat() {
-    chatOpen ? closeChat() : openChat();
-}
+function toggleChat() { chatOpen ? closeChat() : openChat(); }
 
 if (chatToggleBtn) chatToggleBtn.addEventListener('click', toggleChat);
 
-/* ── Touch / Drag on handle ── */
-let dragStartY = 0;
-let dragging   = false;
+/* ── Touch drag on handle ── */
+let dragStartY   = 0;
+let dragWasDragging = false;
 
 if (chatHandle) {
     chatHandle.addEventListener('touchstart', (e) => {
         dragStartY = e.touches[0].clientY;
-        dragging   = true;
-        chatSheet.style.transition = 'none';
+        dragWasDragging = false;
+        chatPanel.style.transition = 'none';
     }, { passive: true });
 
-    document.addEventListener('touchmove', (e) => {
-        if (!dragging) return;
+    chatHandle.addEventListener('touchmove', (e) => {
+        dragWasDragging = true;
         const dy = e.touches[0].clientY - dragStartY;
+        // Drag down to close (when open), drag up to open (when closed)
         if (chatOpen && dy > 0) {
-            chatSheet.style.transform = `translateY(${dy}px)`;
-        } else if (!chatOpen && dy < 0) {
-            const pct = Math.max(0, 1 - Math.abs(dy) / 200);
-            const peek = parseInt(getComputedStyle(document.documentElement).getPropertyValue('--chat-open-height'));
-            chatSheet.style.transform = `translateY(calc(100% - var(--chat-peek) - ${Math.abs(dy)}px))`;
+            chatPanel.style.height = `calc(var(--chat-open, 52vh) - ${dy}px)`;
         }
     }, { passive: true });
 
-    document.addEventListener('touchend', (e) => {
-        if (!dragging) return;
-        dragging = false;
-        chatSheet.style.transition = '';
+    chatHandle.addEventListener('touchend', (e) => {
+        chatPanel.style.transition = '';
+        chatPanel.style.height = '';
+        if (!dragWasDragging) { toggleChat(); return; }
         const dy = e.changedTouches[0].clientY - dragStartY;
-        if (chatOpen) {
-            dy > 60 ? closeChat() : openChat();
-        } else {
-            dy < -60 ? openChat() : closeChat();
-        }
+        if (chatOpen && dy > 70) { closeChat(); }
+        else if (!chatOpen && dy < -70) { openChat(); }
+        else { chatOpen ? openChat() : closeChat(); }
     }, { passive: true });
 }
 
+/* ── Tap video to close chat ── */
+document.getElementById('video-stage')?.addEventListener('click', () => {
+    if (chatOpen && isMobile()) closeChat();
+});
+
 /* ════════════════════════════════════════════════════════
-   PiP LOCAL VIDEO — draggable on mobile
+   PiP DRAG  (touch only, snaps to nearest corner)
 ════════════════════════════════════════════════════════ */
 if (pipContainer) {
-    let pipDragging = false, pipStartX = 0, pipStartY = 0, pipOrigLeft = 0, pipOrigBottom = 0;
+    let pip = { dragging: false, startX: 0, startY: 0 };
 
     pipContainer.addEventListener('touchstart', (e) => {
-        if (e.touches.length !== 1) return;
-        pipDragging = true;
-        pipStartX   = e.touches[0].clientX;
-        pipStartY   = e.touches[0].clientY;
-        const rect  = pipContainer.getBoundingClientRect();
-        pipOrigLeft   = rect.left;
-        pipOrigBottom = window.innerHeight - rect.bottom;
+        e.stopPropagation();
+        const t = e.touches[0];
+        const r = pipContainer.getBoundingClientRect();
+        pip = { dragging: true, startX: t.clientX - r.left, startY: t.clientY - r.top };
         pipContainer.style.transition = 'none';
-        pipContainer.style.right = 'auto';
-        pipContainer.style.bottom = 'auto';
-        pipContainer.style.left   = pipOrigLeft + 'px';
-        pipContainer.style.top    = rect.top + 'px';
+        // Switch from bottom/right to top/left for free movement
+        pipContainer.style.bottom = pipContainer.style.right = '';
+        pipContainer.style.left = r.left + 'px';
+        pipContainer.style.top  = r.top  + 'px';
     }, { passive: true });
 
     document.addEventListener('touchmove', (e) => {
-        if (!pipDragging) return;
-        const dx = e.touches[0].clientX - pipStartX;
-        const dy = e.touches[0].clientY - pipStartY;
-        pipContainer.style.left = (pipOrigLeft + dx) + 'px';
-        pipContainer.style.top  = (parseFloat(pipContainer.style.top) + dy - (e.touches[0].clientY - e.touches[0].clientY)) + 'px';
-        pipStartX = e.touches[0].clientX;
-        pipStartY = e.touches[0].clientY;
+        if (!pip.dragging) return;
+        const t   = e.touches[0];
+        const stage = document.getElementById('video-stage').getBoundingClientRect();
+        const pw  = pipContainer.offsetWidth;
+        const ph  = pipContainer.offsetHeight;
+        let x = t.clientX - pip.startX - stage.left;
+        let y = t.clientY - pip.startY - stage.top;
+        x = Math.max(8, Math.min(stage.width  - pw - 8, x));
+        y = Math.max(8, Math.min(stage.height - ph - 8, y));
+        pipContainer.style.left = x + 'px';
+        pipContainer.style.top  = y + 'px';
     }, { passive: true });
 
     document.addEventListener('touchend', () => {
-        if (!pipDragging) return;
-        pipDragging = false;
-        pipContainer.style.transition = '';
+        if (!pip.dragging) return;
+        pip.dragging = false;
+        pipContainer.style.transition = 'box-shadow .2s';
         // Snap to nearest corner
-        const rect = pipContainer.getBoundingClientRect();
-        const midX = window.innerWidth  / 2;
-        const midY = window.innerHeight / 2;
-        pipContainer.style.left = pipContainer.style.top = pipContainer.style.right = pipContainer.style.bottom = '';
-        if (rect.left < midX) {
-            pipContainer.style.left = '16px';
-        } else {
-            pipContainer.style.right = '16px';
-        }
-        if (rect.top < midY) {
-            pipContainer.style.top = '80px';
-        } else {
-            pipContainer.style.bottom = '200px';
-        }
+        const stage = document.getElementById('video-stage').getBoundingClientRect();
+        const r     = pipContainer.getBoundingClientRect();
+        const cx    = r.left + r.width  / 2 - stage.left;
+        const cy    = r.top  + r.height / 2 - stage.top;
+        pipContainer.style.top = pipContainer.style.left = pipContainer.style.right = pipContainer.style.bottom = '';
+        if (cx < stage.width / 2)  { pipContainer.style.left  = '12px'; }
+        else                        { pipContainer.style.right = '12px'; }
+        if (cy < stage.height / 2) { pipContainer.style.top    = '12px'; }
+        else                        { pipContainer.style.bottom = '90px'; }
     }, { passive: true });
 }
 
@@ -176,7 +170,7 @@ async function initMedia() {
         startBtn.classList.remove('hidden');
         setConnStatus(myAnonId || 'Online', 'green');
     } catch (err) {
-        console.error('[Media]', err);
+        console.error('[Media]', err.name, err.message);
         setOverlay('Camera access denied', 'Please allow camera & microphone, then refresh');
         setConnStatus('Error', 'red');
     }
@@ -198,21 +192,16 @@ function setOverlay(title, sub) {
     if (overlaySub)  overlaySub.innerText  = sub || '';
 }
 
-function setChatStatus(online, partnerName) {
+function setChatStatus(online, name) {
     const color = online ? '#22c55e' : '#4b5563';
-    const name  = online ? (partnerName || 'Connected') : 'Offline';
+    const label = online ? (name || 'Connected') : 'Offline';
     [chatStatusDot, chatStatusDotD].forEach(el => { if (el) el.style.background = color; });
-    [chatPartnerName, chatPartnerNameD].forEach(el => { if (el) el.innerText = name; });
+    [chatPartnerName, chatPartnerNameD].forEach(el => { if (el) el.innerText = label; });
 }
 
 function showReport(show) {
-    if (show) {
-        reportBtn.classList.remove('hidden');
-        reportSep.forEach(el => el.classList.remove('hidden'));
-    } else {
-        reportBtn.classList.add('hidden');
-        reportSep.forEach(el => el.classList.add('hidden'));
-    }
+    reportBtn.classList.toggle('hidden', !show);
+    reportSeps.forEach(el => el.classList.toggle('hidden', !show));
 }
 
 /* ════════════════════════════════════════════════════════
@@ -235,7 +224,7 @@ socket.on('searching', () => {
     teardown();
     remoteVideo.srcObject = null;
 
-    searchingOverlay.classList.remove('hidden');
+    searchingOverlay.style.display = '';  // show overlay
     liveTag.classList.add('hidden');
     if (partnerIdTag) partnerIdTag.classList.add('hidden');
     showReport(false);
@@ -253,9 +242,9 @@ socket.on('matched', async ({ partnerAnonId, isInitiator }) => {
     isConnected          = true;
     currentPartnerAnonId = partnerAnonId;
 
-    searchingOverlay.classList.add('hidden');
+    searchingOverlay.style.display = 'none';  // hide overlay
     liveTag.classList.remove('hidden');
-    if (partnerIdTag)  { partnerIdTag.classList.remove('hidden'); }
+    if (partnerIdTag)  partnerIdTag.classList.remove('hidden');
     if (partnerIdText) partnerIdText.innerText = partnerAnonId;
     showReport(true);
     setChatStatus(true, partnerAnonId);
@@ -264,21 +253,15 @@ socket.on('matched', async ({ partnerAnonId, isInitiator }) => {
     appendSystemMessage(`Connected with ${partnerAnonId} 🌟`);
     enableChat();
 
-    // Auto-open chat on match (mobile UX)
-    if (window.innerWidth < 768) {
-        setTimeout(openChat, 600);
-    }
+    // Auto-open chat on mobile when matched
+    if (isMobile()) setTimeout(openChat, 700);
 
-    setupPeerConnection(localStream, remoteVideo, (signal) => {
-        socket.emit('webrtc-signal', signal);
-    });
-    if (isInitiator) {
-        await createOffer((signal) => socket.emit('webrtc-signal', signal));
-    }
+    setupPeerConnection(localStream, remoteVideo, (sig) => socket.emit('webrtc-signal', sig));
+    if (isInitiator) await createOffer((sig) => socket.emit('webrtc-signal', sig));
 });
 
 socket.on('webrtc-signal', (data) => {
-    handleSignal(data, (signal) => socket.emit('webrtc-signal', signal));
+    handleSignal(data, (sig) => socket.emit('webrtc-signal', sig));
 });
 
 socket.on('partner-disconnected', () => {
@@ -289,10 +272,9 @@ socket.on('partner-disconnected', () => {
 
 socket.on('banned', ({ unbanDate }) => {
     bannedOverlay.classList.remove('hidden');
-    bannedOverlay.classList.add('flex');
-    if (banTimeText && unbanDate) {
+    bannedOverlay.style.display = 'flex';
+    if (banTimeText && unbanDate)
         banTimeText.innerText = `Ban expires: ${new Date(unbanDate).toLocaleString()}`;
-    }
     if (localStream) localStream.getTracks().forEach(t => t.stop());
     teardown();
 });
@@ -302,23 +284,20 @@ socket.on('system-warning', (msg) => appendSystemMessage('⚠️ ' + msg));
 socket.on('chat-message', (text) => {
     if (typeof text !== 'string') return;
     appendRemoteMessage(text.trim().slice(0, 500));
-    // Show unread badge when chat is closed
-    if (!chatOpen && window.innerWidth < 768) {
+    if (isMobile() && !chatOpen) {
         unreadCount++;
-        chatBadge.classList.remove('hidden');
-        chatBadge.innerText = unreadCount > 9 ? '9+' : String(unreadCount);
+        if (chatBadge) {
+            chatBadge.classList.remove('hidden');
+            chatBadge.innerText = unreadCount > 9 ? '9+' : String(unreadCount);
+        }
     }
 });
 
 /* ════════════════════════════════════════════════════════
-   UI CONTROLS
+   CONTROLS
 ════════════════════════════════════════════════════════ */
 startBtn.addEventListener('click', () => socket.emit('start-search'));
-
-nextBtn.addEventListener('click', () => {
-    closeChat();
-    socket.emit('next');
-});
+nextBtn.addEventListener('click',  () => { closeChat(); socket.emit('next'); });
 
 reportBtn.addEventListener('click', () => {
     if (!isConnected) return;
@@ -331,86 +310,62 @@ chatForm.addEventListener('submit', (e) => {
     e.preventDefault();
     const text = chatInput.value.trim().slice(0, 500);
     if (!text || !isConnected) return;
-
-    const msgKey = Date.now() + ':' + text;
-    if (sentMessages.has(msgKey)) return;
-    sentMessages.add(msgKey);
-    setTimeout(() => sentMessages.delete(msgKey), 3000);
-
+    const key = Date.now() + text;
+    if (sentMessages.has(key)) return;
+    sentMessages.add(key);
+    setTimeout(() => sentMessages.delete(key), 3000);
     appendLocalMessage(text);
     socket.emit('chat-message', text);
     chatInput.value = '';
 });
 
-// Mic / Cam
 document.getElementById('toggle-mic').addEventListener('click', function () {
     if (!localStream) return;
     const t = localStream.getAudioTracks()[0];
-    if (!t) return;
-    t.enabled = !t.enabled;
-    this.classList.toggle('active');
+    if (t) { t.enabled = !t.enabled; this.classList.toggle('active'); }
 });
 
-document.getElementById('toggle-video').addEventListener('click', function () {
+document.getElementById('toggle-video-btn').addEventListener('click', function () {
     if (!localStream) return;
     const t = localStream.getVideoTracks()[0];
-    if (!t) return;
-    t.enabled = !t.enabled;
-    this.classList.toggle('active');
+    if (t) { t.enabled = !t.enabled; this.classList.toggle('active'); }
 });
 
-// Close chat when tapping on video area
-document.addEventListener('click', (e) => {
-    if (!chatOpen) return;
-    if (chatSheet.contains(e.target)) return;
-    if (chatToggleBtn && chatToggleBtn.contains(e.target)) return;
-    if (window.innerWidth < 768) closeChat();
+chatInput.addEventListener('focus', () => {
+    if (isMobile()) { openChat(); setTimeout(() => chatInput.scrollIntoView({ behavior:'smooth', block:'center' }), 300); }
 });
 
 /* ════════════════════════════════════════════════════════
-   CHAT UI HELPERS
+   CHAT UI
 ════════════════════════════════════════════════════════ */
 function removePlaceholder() {
-    if (chatPlaceholderEl && chatPlaceholderEl.parentNode === chatMessages) {
+    if (chatPlaceholderEl?.parentNode === chatMessages) {
         chatMessages.removeChild(chatPlaceholderEl);
         chatPlaceholderEl = null;
     }
 }
-
-function scrollChat() { chatMessages.scrollTop = chatMessages.scrollHeight; }
+const scrollChat = () => { chatMessages.scrollTop = chatMessages.scrollHeight; };
 
 function appendLocalMessage(text) {
     removePlaceholder();
-    const wrap   = document.createElement('div');
-    wrap.className = 'msg-row-local';
-    const name   = document.createElement('div');
-    name.className = 'msg-name'; name.innerText = 'You';
-    const bubble = document.createElement('div');
-    bubble.className = 'local-msg'; bubble.innerText = text;
-    wrap.append(name, bubble);
-    chatMessages.appendChild(wrap);
-    scrollChat();
+    const wrap = document.createElement('div'); wrap.className = 'msg-row-local';
+    const name = document.createElement('div'); name.className = 'msg-name'; name.innerText = 'You';
+    const b    = document.createElement('div'); b.className = 'local-msg';   b.innerText = text;
+    wrap.append(name, b); chatMessages.appendChild(wrap); scrollChat();
 }
 
 function appendRemoteMessage(text) {
     removePlaceholder();
-    const wrap   = document.createElement('div');
-    wrap.className = 'msg-row-remote';
-    const name   = document.createElement('div');
-    name.className = 'msg-name'; name.innerText = currentPartnerAnonId || 'Stranger';
-    const bubble = document.createElement('div');
-    bubble.className = 'remote-msg'; bubble.innerText = text;
-    wrap.append(name, bubble);
-    chatMessages.appendChild(wrap);
-    scrollChat();
+    const wrap = document.createElement('div'); wrap.className = 'msg-row-remote';
+    const name = document.createElement('div'); name.className = 'msg-name'; name.innerText = currentPartnerAnonId || 'Stranger';
+    const b    = document.createElement('div'); b.className = 'remote-msg';  b.innerText = text;
+    wrap.append(name, b); chatMessages.appendChild(wrap); scrollChat();
 }
 
 function appendSystemMessage(text) {
     removePlaceholder();
-    const el = document.createElement('div');
-    el.className = 'system-msg'; el.innerText = text;
-    chatMessages.appendChild(el);
-    scrollChat();
+    const el = document.createElement('div'); el.className = 'system-msg'; el.innerText = text;
+    chatMessages.appendChild(el); scrollChat();
 }
 
 function enableChat()  { chatInput.disabled = false; chatSubmit.disabled = false; chatInput.focus(); }
@@ -419,24 +374,14 @@ function disableChat() { chatInput.disabled = true;  chatSubmit.disabled = true;
 function resetChatUI() {
     chatMessages.innerHTML = '';
     chatPlaceholderEl = document.createElement('div');
-    chatPlaceholderEl.id        = 'chat-placeholder';
-    chatPlaceholderEl.className = 'text-center text-xs text-white/20 my-4';
+    chatPlaceholderEl.id = 'chat-placeholder';
+    chatPlaceholderEl.className = 'chat-placeholder';
     chatPlaceholderEl.innerText = 'Chat starts when you are matched.';
     chatMessages.appendChild(chatPlaceholderEl);
     sentMessages.clear();
     unreadCount = 0;
     if (chatBadge) chatBadge.classList.add('hidden');
 }
-
-/* ════════════════════════════════════════════════════════
-   KEYBOARD: scroll chat input into view on mobile
-════════════════════════════════════════════════════════ */
-chatInput.addEventListener('focus', () => {
-    if (window.innerWidth < 768) {
-        openChat();
-        setTimeout(() => chatInput.scrollIntoView({ behavior: 'smooth', block: 'center' }), 300);
-    }
-});
 
 /* ════════════════════════════════════════════════════════
    BOOT
