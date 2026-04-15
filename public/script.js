@@ -22,9 +22,7 @@ const chatSubmit        = document.getElementById('chat-submit');
 const connStatus        = document.getElementById('connection-status');
 const connDot           = document.getElementById('conn-dot');
 const chatStatusDot     = document.getElementById('chat-status-dot');
-const chatStatusDotD    = document.getElementById('chat-status-dot-desk');
 const chatPartnerName   = document.getElementById('chat-partner-name');
-const chatPartnerNameD  = document.getElementById('chat-partner-name-desk');
 const partnerIdTag      = document.getElementById('partner-id-tag');
 const partnerIdText     = document.getElementById('partner-id-text');
 const myAnonLabel       = document.getElementById('my-anon-id');
@@ -43,17 +41,13 @@ let currentPartnerAnonId = '';
 let chatPlaceholderEl    = document.getElementById('chat-placeholder');
 const sentMessages       = new Set();
 
-/* ─── Is mobile? ───────────────────────────────────────── */
-const isMobile = () => window.innerWidth < 768;
-
 /* ════════════════════════════════════════════════════════
-   CHAT PANEL  (collapsible on mobile, always open on desktop)
+   CHAT PANEL
 ════════════════════════════════════════════════════════ */
 let chatOpen = false;
 let unreadCount = 0;
 
 function openChat() {
-    if (!isMobile()) return; // desktop: always open
     chatOpen = true;
     chatPanel.classList.add('open');
     unreadCount = 0;
@@ -62,7 +56,6 @@ function openChat() {
 }
 
 function closeChat() {
-    if (!isMobile()) return;
     chatOpen = false;
     chatPanel.classList.remove('open');
 }
@@ -104,7 +97,7 @@ if (chatHandle) {
 
 /* ── Tap video to close chat ── */
 document.getElementById('video-stage')?.addEventListener('click', () => {
-    if (chatOpen && isMobile()) closeChat();
+    if (chatOpen) closeChat();
 });
 
 /* ════════════════════════════════════════════════════════
@@ -195,8 +188,8 @@ function setOverlay(title, sub) {
 function setChatStatus(online, name) {
     const color = online ? '#22c55e' : '#4b5563';
     const label = online ? (name || 'Connected') : 'Offline';
-    [chatStatusDot, chatStatusDotD].forEach(el => { if (el) el.style.background = color; });
-    [chatPartnerName, chatPartnerNameD].forEach(el => { if (el) el.innerText = label; });
+    if (chatStatusDot) chatStatusDot.style.background = color;
+    if (chatPartnerName) chatPartnerName.innerText = label;
 }
 
 function showReport(show) {
@@ -253,8 +246,8 @@ socket.on('matched', async ({ partnerAnonId, isInitiator }) => {
     appendSystemMessage(`Connected with ${partnerAnonId} 🌟`);
     enableChat();
 
-    // Auto-open chat on mobile when matched
-    if (isMobile()) setTimeout(openChat, 700);
+    // Auto-open chat
+    setTimeout(openChat, 700);
 
     setupPeerConnection(localStream, remoteVideo, (sig) => socket.emit('webrtc-signal', sig));
     if (isInitiator) await createOffer((sig) => socket.emit('webrtc-signal', sig));
@@ -284,7 +277,7 @@ socket.on('system-warning', (msg) => appendSystemMessage('⚠️ ' + msg));
 socket.on('chat-message', (text) => {
     if (typeof text !== 'string') return;
     appendRemoteMessage(text.trim().slice(0, 500));
-    if (isMobile() && !chatOpen) {
+    if (!chatOpen) {
         unreadCount++;
         if (chatBadge) {
             chatBadge.classList.remove('hidden');
@@ -332,7 +325,8 @@ document.getElementById('toggle-video-btn').addEventListener('click', function (
 });
 
 chatInput.addEventListener('focus', () => {
-    if (isMobile()) { openChat(); setTimeout(() => chatInput.scrollIntoView({ behavior:'smooth', block:'center' }), 300); }
+    openChat();
+    setTimeout(() => chatInput.scrollIntoView({ behavior:'smooth', block:'center' }), 300);
 });
 
 /* ════════════════════════════════════════════════════════

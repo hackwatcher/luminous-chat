@@ -115,9 +115,9 @@
                 <span class="font-headline font-black text-sm tracking-wider">NEXT</span>
                 <span class="material-symbols-outlined" style="font-size:18px">skip_next</span>
             </button>
-            <!-- Chat toggle: only visible on mobile -->
-            <div class="ctrl-divider mobile-only"></div>
-            <button id="chat-toggle-btn" class="ctrl-btn mobile-only" title="Chat">
+            <!-- Chat toggle -->
+            <div class="ctrl-divider"></div>
+            <button id="chat-toggle-btn" class="ctrl-btn" title="Chat">
                 <span class="material-symbols-outlined" style="font-size:20px">chat</span>
                 <span id="chat-badge" class="chat-badge hidden">!</span>
             </button>
@@ -128,8 +128,8 @@
     <!-- ══ Chat Panel ════════════════════════════════════ -->
     <div id="chat-panel">
 
-        <!-- Drag handle (mobile only) -->
-        <div id="chat-handle" class="mobile-only">
+        <!-- Drag handle -->
+        <div id="chat-handle">
             <div class="handle-bar"></div>
             <div class="handle-header">
                 <div class="flex items-center gap-2">
@@ -138,13 +138,6 @@
                 </div>
                 <span id="chat-partner-name" class="text-xs text-white/30 truncate max-w-[120px]">Offline</span>
             </div>
-        </div>
-
-        <!-- Desktop-only chat header -->
-        <div id="chat-header-desk" class="desktop-only chat-header-desk">
-            <div id="chat-status-dot-desk" class="status-dot"></div>
-            <h3 class="font-headline font-bold text-sm text-white">Live Chat</h3>
-            <span id="chat-partner-name-desk" class="ml-auto text-xs text-white/25 truncate max-w-[90px]">Offline</span>
         </div>
 
         <!-- Messages -->

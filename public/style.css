@@ -20,8 +20,6 @@ body {
 
 /* ─── Utilities ─────────────────────────────────────────── */
 .hidden { display: none !important; }
-.mobile-only  { display: flex; }
-.desktop-only { display: none; }
 
 .material-symbols-outlined {
     font-variation-settings: 'FILL' 0, 'wght' 400, 'GRAD' 0, 'opsz' 24;
@@ -447,49 +445,4 @@ body {
 /* General button reset */
 button { -webkit-tap-highlight-color: transparent; touch-action: manipulation; cursor: pointer; }
 
-/* ═══════════════════════════════════════════════════════════
-   DESKTOP  —  md (768px +)
-═══════════════════════════════════════════════════════════ */
-@media (min-width: 768px) {
-
-    /* Flip utility visibility */
-    .mobile-only  { display: none !important; }
-    .desktop-only { display: flex !important; }
-
-    /* Layout: true two-column grid */
-    #app-layout {
-        flex-direction: row;
-    }
-
-    /* Video stage takes remaining space */
-    #video-stage {
-        flex: 1;
-    }
-
-    /* PiP slightly larger on desktop */
-    #pip-container {
-        width: 140px; height: 196px;
-        bottom: 100px; right: 16px;
-    }
-
-    /* Chat panel becomes full-height sidebar */
-    #chat-panel {
-        width: 300px;
-        flex-shrink: 0;
-        height: 100% !important;   /* override JS-set height */
-        border-top: none;
-        border-left: 1px solid rgba(255,255,255,0.06);
-        transition: none;
-    }
-    #chat-panel.open { height: 100% !important; }
-
-    /* Desktop header inside chat */
-    #chat-header-desk {
-        border-bottom: 1px solid rgba(255,255,255,0.05);
-    }
-}
-
-@media (min-width: 1024px) {
-    #chat-panel { width: 340px; }
-    #pip-container { width: 160px; height: 220px; }
-}
+/* Removed Desktop Layout Settings */
