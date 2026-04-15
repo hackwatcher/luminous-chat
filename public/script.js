@@ -3,18 +3,7 @@
 ════════════════════════════════════════════════════════════ */
 'use strict';
 
-import { 
-    loginWithGoogle, 
-    loginWithFacebook, 
-    loginWithPhone, 
-    loginAnonymously, 
-    registerWithEmail,
-    loginWithEmail,
-    saveUserProfile,
-    getUserProfile,
-    watchAuthState, 
-    logout 
-} from './services/auth.js';
+import * as FirebaseAuth from './services/auth.js';
 
 const PROFILES = [
     { id: 1, name: 'Elena', age: 24, bio: 'Chasing neon lights and cinematic frames. 🌙', img: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAJ8J-e6JNHFX8-Uod0WhZIIlV8CEGZd4P9gsiwpnYW12oyySqxgpGPZNoNYFLO_KMpfJVeG4EsZTBVFHP24Nas7guIwJ3JLfOxA_9XiskTxNJo8Bqyjja1gaIUq1DxhdTClAnF8IftsVxhAu6JoggkIA43MFW5mnH-BCHVtN5ulYFTp-cIjcsMV_ssqQ1lMWQTjc9N9539MQzsMI_NCQ_pcWyvOHbReu9du377pOZ8eHH-VCBViIeNzlf6_CXbCJRkFd28LI0k3XC3', tags: ['Art', 'Music'] },
@@ -101,25 +90,14 @@ class ScreenManager {
                 formToggle.innerHTML = isLoginMode ? 'New here? <span class="font-bold text-primary">Create Account</span>' : 'Already have an account? <span class="font-bold text-primary">Login</span>';
             };
 
-            const handleUser = async (user) => {
+            const handleUser = (user) => {
                 if (user) {
                     const accounts = JSON.parse(localStorage.getItem('luminous_accounts') || '{}');
-                    let savedProfile = accounts[user.email];
-                    
-                    // NEW: Try to fetch from Cloud Firestore if local mock fails
-                    if (!savedProfile) {
-                        try {
-                            savedProfile = await getUserProfile(user.uid);
-                            console.log('[Auth] Profile recovered from Cloud Firestore');
-                        } catch (e) { console.error('[Auth] Firestore fetch failed'); }
-                    }
-
-                    savedProfile = savedProfile || {};
+                    const savedProfile = accounts[user.email] || {};
                     const role = user.email === 'golcuu16@gmail.com' ? 'admin' : 'user';
                     
                     const userData = {
                         ...savedProfile,
-                        uid: user.uid,
                         name: savedProfile.name || user.displayName || user.email?.split('@')[0] || 'Guest',
                         email: user.email,
                         role: role
@@ -142,7 +120,7 @@ class ScreenManager {
                         submitBtn.innerText = 'Processing...';
                         let user;
                         try {
-                             user = isLoginMode ? await loginWithEmail(email, pass) : await registerWithEmail(email, pass);
+                             user = isLoginMode ? await FirebaseAuth.loginWithEmail(email, pass) : await FirebaseAuth.registerWithEmail(email, pass);
                         } catch (fError) { console.warn("Firebase bypassed, using mock."); }
 
                         if (!user) user = { email: email, displayName: email.split('@')[0] };
@@ -158,7 +136,7 @@ class ScreenManager {
             const gBtn = document.getElementById('auth-google-btn');
             if (gBtn) gBtn.onclick = async () => {
                 try {
-                    const user = await loginWithGoogle();
+                    const user = await FirebaseAuth.loginWithGoogle();
                     handleUser(user);
                 } catch(e) { 
                     if (e.message !== "CONFIG_MISSING") alert("Google login failed: " + e.message); 
@@ -168,7 +146,7 @@ class ScreenManager {
             const fBtn = document.getElementById('auth-facebook-btn');
             if (fBtn) fBtn.onclick = async () => {
                 try {
-                    const user = await loginWithFacebook();
+                    const user = await FirebaseAuth.loginWithFacebook();
                     if (user) handleUser(user);
                 } catch(e) { alert("Facebook login failed"); }
             };
@@ -176,7 +154,7 @@ class ScreenManager {
             const pBtn = document.getElementById('auth-phone-btn');
             if (pBtn) pBtn.onclick = () => {
                 const num = prompt("Enter your phone number (+90...):");
-                if (num) loginWithPhone(num).then(res => {
+                if (num) FirebaseAuth.loginWithPhone(num).then(res => {
                     const code = prompt("Enter the SMS code:");
                     res.confirm(code).then(r => handleUser(r.user));
                 });
@@ -184,7 +162,7 @@ class ScreenManager {
 
             const sBtn = document.getElementById('auth-skip-btn');
             if (sBtn) sBtn.onclick = async () => {
-                try { const user = await loginAnonymously(); handleUser(user); }
+                try { const user = await FirebaseAuth.loginAnonymously(); handleUser(user); }
                 catch(e) { handleUser({ displayName: 'Guest' }); }
             };
         }
@@ -199,8 +177,7 @@ class ScreenManager {
         if (name === 'matching') {
             const stopBtn = document.getElementById('stop-search-btn');
             if (stopBtn) stopBtn.onclick = () => { socket.emit('next'); this.switchScreen('discover'); };
-
-            // Ensure camera is ready before searching
+            
             const startSearch = async () => {
                 if (!localStream) {
                     try {
@@ -208,7 +185,7 @@ class ScreenManager {
                         const lv = document.getElementById('local-video');
                         if (lv) lv.srcObject = localStream;
                     } catch (err) {
-                        alert('Kamera ve mikrofon izni gerekli. Lütfen tarayıcı izinlerini kontrol edin.');
+                        alert('Kamera ve mikrofon izni gerekli!');
                         this.switchScreen('discover');
                         return;
                     }
@@ -224,59 +201,14 @@ class ScreenManager {
         if (name === 'chat') this.wireChatEvents();
 
         if (name === 'profile') {
-            const user = JSON.parse(localStorage.getItem('luminous_user') || '{}');
-            const nameInp = document.getElementById('profile-name');
-            const bioInp = document.getElementById('profile-bio');
-            const preview = document.getElementById('profile-preview-img');
             const back = document.getElementById('profile-back-btn');
             const save = document.getElementById('profile-save-btn');
-            const editPhoto = document.getElementById('profile-edit-photo');
-
-            if (nameInp) nameInp.value = user.name || '';
-            if (bioInp) bioInp.value = user.bio || '';
-            if (preview && user.photo) preview.src = user.photo;
-
-            if (editPhoto) editPhoto.onclick = () => {
-                const newUrl = prompt("Enter new photo URL:");
-                if (newUrl && preview) {
-                    preview.src = newUrl;
-                    user.photo = newUrl;
-                }
-            };
-
             if (back) back.onclick = () => this.switchScreen('discover');
-            
-            if (save) save.onclick = async () => {
-                try {
-                    save.innerText = '...';
-                    const updatedData = {
-                        ...user,
-                        name: nameInp.value,
-                        bio: bioInp.value,
-                        photo: preview.src
-                    };
-
-                    // Save to Cloud
-                    if (user.uid) {
-                        await saveUserProfile(user.uid, updatedData);
-                    }
-
-                    // Save Locally
-                    localStorage.setItem('luminous_user', JSON.stringify(updatedData));
-                    
-                    // Update mock accounts
-                    if (user.email) {
-                        const accs = JSON.parse(localStorage.getItem('luminous_accounts') || '{}');
-                        accs[user.email] = updatedData;
-                        localStorage.setItem('luminous_accounts', JSON.stringify(accs));
-                    }
-
-                    alert('Profile updated successfully! ✨');
-                } catch (e) {
-                    alert('Failed to save profile');
-                } finally {
-                    save.innerText = 'Save';
-                }
+            if (save) save.onclick = () => {
+                const n = document.getElementById('profile-name').value;
+                const b = document.getElementById('profile-bio').value;
+                localStorage.setItem('luminous_user', JSON.stringify({ name: n, bio: b }));
+                alert('Saved!');
             };
         }
 
@@ -289,11 +221,7 @@ class ScreenManager {
             const adminLink = document.getElementById('admin-link-container');
 
             if (back) back.onclick = () => this.switchScreen('discover');
-            if (logout) logout.onclick = async () => {
-                try { await logout(); } catch(e) { console.error(e); }
-                localStorage.removeItem('luminous_user');
-                window.location.reload();
-            };
+            if (logout) logout.onclick = () => { localStorage.clear(); window.location.reload(); };
             if (premBtn) premBtn.onclick = () => this.switchScreen('premium');
             
             // Role check for Admin Panel
@@ -361,7 +289,7 @@ class ScreenManager {
         }
     }
 
-    attachGlobalElements(name) {
+    attachGlobalElements(screenName) {
         // Sync User Profile Data to Navbar/Header
         const saved = localStorage.getItem('luminous_user');
         if (saved) {
@@ -371,8 +299,27 @@ class ScreenManager {
             if (navImg && user.photo) navImg.src = user.photo;
             if (navName && user.name) navName.innerText = user.name;
         }
+    }
 
-        // Video element routing
+    updateNavState(screenName) {
+        // Screens where navigation bar should be visible
+        const mainScreens = ['discover', 'inbox', 'history', 'profile', 'settings'];
+        if (mainScreens.includes(screenName)) {
+            this.nav.classList.remove('hidden');
+            this.nav.style.display = 'flex';
+        } else {
+            this.nav.classList.add('hidden');
+            this.nav.style.display = 'none';
+        }
+
+        // Active state highlight
+        document.querySelectorAll('#global-nav [data-nav]').forEach(btn => {
+            if (btn.getAttribute('data-nav') === screenName) btn.classList.add('nav-active');
+            else btn.classList.remove('nav-active');
+        });
+    }
+
+    attachGlobalElements(name) {
         if (name === 'chat') {
             const rv = document.getElementById('remote-video');
             const lv = document.getElementById('local-video');
@@ -382,21 +329,6 @@ class ScreenManager {
             const rv = document.getElementById('remote-video');
             if (rv) rv.style.display = 'none';
         }
-    }
-
-    updateNavState(screenName) {
-        const mainScreens = ['discover', 'inbox', 'history', 'profile', 'settings'];
-        if (mainScreens.includes(screenName)) {
-            this.nav.classList.remove('hidden');
-            this.nav.style.display = 'flex';
-        } else {
-            this.nav.classList.add('hidden');
-            this.nav.style.display = 'none';
-        }
-        document.querySelectorAll('#global-nav [data-nav]').forEach(btn => {
-            if (btn.getAttribute('data-nav') === screenName) btn.classList.add('nav-active');
-            else btn.classList.remove('nav-active');
-        });
     }
 
     initSwipeDeck() {
@@ -770,13 +702,12 @@ class ScreenManager {
         return true;
     }
 
-    async finishOnboarding() {
+    finishOnboarding() {
         // Correctly identify role based on previously saved email or bio key
         const existingData = JSON.parse(localStorage.getItem('luminous_user') || '{}');
         const role = existingData.email === 'golcuu16@gmail.com' || this.onboardingData.bio?.includes('ADMIN_KEY_NEXUS') ? 'admin' : 'user';
 
         const finalProfile = {
-            uid: existingData.uid,
             name: this.onboardingData.name,
             email: existingData.email,
             age: this.onboardingData.age,
@@ -790,15 +721,7 @@ class ScreenManager {
 
         localStorage.setItem('luminous_user', JSON.stringify(finalProfile));
         
-        // Save to Cloud Firestore for true persistence
-        if (finalProfile.uid) {
-            try {
-                await saveUserProfile(finalProfile.uid, finalProfile);
-                console.log('[Onboarding] Profile saved to Cloud');
-            } catch (e) { console.error('[Onboarding] Cloud save failed'); }
-        }
-
-        // Mock Account persistence for demo fallback
+        // Mock Account persistence for demo
         if (finalProfile.email) {
             const accounts = JSON.parse(localStorage.getItem('luminous_accounts') || '{}');
             accounts[finalProfile.email] = finalProfile;
@@ -854,20 +777,26 @@ const screenMgr = new ScreenManager('app-container');
 let localStream = null, isConnected = false, currentPartnerAnonId = '';
 
 async function initMedia() {
-    // Ban check
+    // Ban check (no hardcoded IDs)
     const user = JSON.parse(localStorage.getItem('luminous_user') || '{}');
-    const banned = JSON.parse(localStorage.getItem('luminous_banned_list') || '[]');
-    if (user.role !== 'admin' && user.name && banned.includes(user.name)) {
-        const overlay = document.getElementById('banned-overlay');
-        if (overlay) overlay.classList.remove('hidden');
+    const bannedList = JSON.parse(localStorage.getItem('luminous_banned_list') || '[]');
+    if (user.role !== 'admin' && user.name && bannedList.includes(user.name)) {
+        document.getElementById('banned-overlay').classList.remove('hidden');
         return;
     }
-    // Camera (non-blocking)
+
+    // Show screen first (non-blocking)
+    const saved = localStorage.getItem('luminous_user');
+    screenMgr.switchScreen(saved ? 'discover' : 'splash');
+
+    // Request camera in background
     try {
         localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
         const lv = document.getElementById('local-video');
         if (lv) lv.srcObject = localStream;
-    } catch (e) { console.warn('[Camera] Not available'); }
+    } catch (err) {
+        console.warn('[Camera] Not available yet - will request when entering video chat');
+    }
 }
 
 function saveToInbox(partner, msg) {
@@ -923,38 +852,22 @@ function appendRemoteMessage(text) {
     list.appendChild(div); list.scrollTop = list.scrollHeight;
 }
 
-watchAuthState(async (firebaseUser) => {
-    // This is the SINGLE source of truth for routing on app start
-    const isEntryScreen = !screenMgr.currentScreen || 
-        screenMgr.currentScreen === 'splash' || 
-        screenMgr.currentScreen === 'auth';
+FirebaseAuth.watchAuthState((user) => {
+    if (user) {
+        console.log("[Auth] User is logged in:", user.uid);
+        const saved = JSON.parse(localStorage.getItem('luminous_user') || '{}');
+        const isProfileComplete = !!saved.age;
 
-    if (firebaseUser && !firebaseUser.isAnonymous) {
-        // Real logged-in user
-        let profile = JSON.parse(localStorage.getItem('luminous_user') || 'null');
-
-        if (!profile) {
-            // Try cloud first
-            try {
-                profile = await getUserProfile(firebaseUser.uid);
-                if (profile) {
-                    localStorage.setItem('luminous_user', JSON.stringify(profile));
-                }
-            } catch(e) { console.warn('[Auth] Cloud fetch failed'); }
-        }
-
-        if (isEntryScreen) {
-            if (profile && profile.age) {
-                // Profile complete → go to app
+        if (screenMgr.currentScreen === 'splash' || screenMgr.currentScreen === 'auth') {
+            if (isProfileComplete) {
                 screenMgr.switchScreen('discover');
             } else {
-                // Profile incomplete → auth screen (handleUser will route to onboarding)
-                screenMgr.switchScreen('auth');
+                screenMgr.switchScreen('onboarding');
             }
         }
     } else {
-        // No user (logged out or anonymous)
-        if (isEntryScreen) {
+        // Logged out - show splash
+        if (!screenMgr.currentScreen || screenMgr.currentScreen === 'discover') {
             screenMgr.switchScreen('splash');
         }
     }

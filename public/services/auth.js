@@ -16,12 +16,6 @@ import {
     onAuthStateChanged,
     signOut
 } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-import { 
-    getFirestore, 
-    doc, 
-    setDoc, 
-    getDoc 
-} from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
 
 // --- CONFIGURATION ---
 // Replace with your real config from Firebase Console
@@ -37,7 +31,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 export const auth = getAuth(app);
-export const db = getFirestore(app);
 
 /** 
  * Check if the config is still placeholder 
@@ -180,37 +173,5 @@ export async function logout() {
         localStorage.removeItem('luminous_user');
     } catch (error) {
         console.error("[Auth] Logout Error:", error);
-    }
-}
-
-/**
- * Save/Update User Profile in Firestore
- */
-export async function saveUserProfile(uid, data) {
-    try {
-        await setDoc(doc(db, "users", uid), {
-            ...data,
-            updatedAt: new Date().toISOString()
-        }, { merge: true });
-        return true;
-    } catch (error) {
-        console.error("[Firestore] Save Error:", error);
-        throw error;
-    }
-}
-
-/**
- * Get User Profile from Firestore
- */
-export async function getUserProfile(uid) {
-    try {
-        const docSnap = await getDoc(doc(db, "users", uid));
-        if (docSnap.exists()) {
-            return docSnap.data();
-        }
-        return null;
-    } catch (error) {
-        console.error("[Firestore] Get Error:", error);
-        throw error;
     }
 }
