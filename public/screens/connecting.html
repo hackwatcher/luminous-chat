@@ -167,15 +167,17 @@
 </div>
 </main>
 <!-- BottomNavBar (Hidden on desktop via shell logic) -->
-<nav class="fixed bottom-0 left-0 w-full flex justify-around items-center px-8 pb-6 pt-4 bg-white/70 dark:bg-slate-900/70 backdrop-blur-xl z-50 rounded-t-[1.5rem] shadow-[0px_-12px_32px_rgba(42,52,57,0.06)] md:hidden">
-<a class="flex flex-col items-center justify-center bg-[#6366F1]/10 text-[#6366F1] rounded-2xl px-6 py-2 transition-all active:scale-90 duration-150" href="#">
-<span class="material-symbols-outlined" data-icon="home">home</span>
-<span class="font-manrope text-[10px] uppercase tracking-widest font-semibold mt-1">Home</span>
-</a>
-<a class="flex flex-col items-center justify-center text-slate-400 px-6 py-2 hover:bg-slate-100 dark:hover:bg-slate-800 transition-all active:scale-90 duration-150" href="#">
-<span class="material-symbols-outlined" data-icon="history">history</span>
-<span class="font-manrope text-[10px] uppercase tracking-widest font-semibold mt-1">History</span>
-</a>
+<!-- Bottom Navigation Standardized -->
+<nav class="fixed bottom-0 left-0 w-full z-50 flex justify-around items-center px-8 pb-8 pt-4 bg-[#050f1c]/70 backdrop-blur-xl rounded-t-[3rem] shadow-[0_-8px_30px_rgba(110,59,215,0.1)]">
+    <button class="flex flex-col items-center justify-center text-slate-500 p-4 hover:text-[#ba9eff] transition-colors scale-110 duration-300 ease-out">
+        <span class="material-symbols-outlined" data-icon="style">style</span>
+    </button>
+    <button class="flex flex-col items-center justify-center bg-gradient-to-br from-[#ba9eff] to-[#6e3bd7] text-white rounded-full p-4 shadow-[0_0_20px_rgba(186,158,255,0.4)] scale-110 duration-300 ease-out">
+        <span class="material-symbols-outlined" data-icon="videocam" style="font-variation-settings: 'FILL' 1;">videocam</span>
+    </button>
+    <button class="flex flex-col items-center justify-center text-slate-500 p-4 hover:text-[#ba9eff] transition-colors scale-110 duration-300 ease-out">
+        <span class="material-symbols-outlined" data-icon="chat_bubble">chat_bubble</span>
+    </button>
 </nav>
 <!-- Aesthetic Decorative Image (Top Right - Glassmorphism) -->
 <div class="fixed top-24 right-8 w-48 h-64 rounded-3xl overflow-hidden opacity-40 mix-blend-multiply hidden lg:block transform rotate-3">
