@@ -4,7 +4,7 @@
 ──────────────────────────────────────────────────────────────── */
 
 const socket = io({
-    transports   : ['websocket', 'polling'],
+    transports   : ['polling', 'websocket'],
     reconnection : true,
     reconnectionAttempts : Infinity,
     reconnectionDelay    : 1000,
