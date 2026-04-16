@@ -54,8 +54,10 @@ function bindScreenLogic(name) {
     }
 
     if (name === 'connecting') {
-        // Bind Stop Search Button
-        const stopBtn = appContainer.querySelector('button');
+        // Bind Stop Search Button (More specific selector to avoid settings button)
+        const buttons = Array.from(appContainer.querySelectorAll('button'));
+        const stopBtn = buttons.find(b => b.innerText.includes('Aramayı Durdur'));
+        
         if (stopBtn) {
             stopBtn.addEventListener('click', () => {
                 socket.emit('next');
@@ -63,7 +65,6 @@ function bindScreenLogic(name) {
             });
         }
         
-        // Ensure Nav is hidden or bound if exists
         bindNav();
     }
     
@@ -128,11 +129,16 @@ function bindScreenLogic(name) {
 }
 
 function bindNav() {
-    const navButtons = appContainer.querySelectorAll('nav button');
-    if (navButtons.length >= 3) {
-        navButtons[1].addEventListener('click', () => loadScreen('chat'));    // Live
-        navButtons[2].addEventListener('click', () => loadScreen('profile')); // Profile (Chat bubble icon was Profile in template)
-    }
+    const nav = appContainer.querySelector('nav');
+    if (!nav) return;
+
+    const homeBtn    = nav.querySelector('[data-icon="home"]')?.parentNode || nav.querySelector('[data-icon="style"]')?.parentNode;
+    const liveBtn    = nav.querySelector('[data-icon="videocam"]')?.parentNode;
+    const profileBtn = nav.querySelector('[data-icon="chat_bubble"]')?.parentNode || nav.querySelector('[data-icon="person"]')?.parentNode;
+
+    if (homeBtn)    homeBtn.addEventListener('click',    () => loadScreen('splash'));
+    if (liveBtn)    liveBtn.addEventListener('click',    () => loadScreen('chat'));
+    if (profileBtn) profileBtn.addEventListener('click', () => loadScreen('profile'));
 }
 
 /* ─── Media ──────────────────────────────────────────────── */
