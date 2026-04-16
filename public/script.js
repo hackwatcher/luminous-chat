@@ -149,7 +149,7 @@ function bindScreenLogic(name) {
         // Header Settings
         const settingsBtn = appContainer.querySelector('button.material-symbols-outlined');
         if (settingsBtn && settingsBtn.innerText.includes('settings')) {
-            settingsBtn.addEventListener('click', () => loadScreen('profile'));
+            settingsBtn.addEventListener('click', () => loadScreen('settings'));
         }
 
         bindNav();
@@ -169,7 +169,7 @@ function bindScreenLogic(name) {
         });
 
         const settingsBtn = appContainer.querySelector('button .material-symbols-outlined[data-icon="settings"]')?.parentNode;
-        if (settingsBtn) settingsBtn.addEventListener('click', () => loadScreen('profile'));
+        if (settingsBtn) settingsBtn.addEventListener('click', () => loadScreen('settings'));
 
         bindNav();
     }
@@ -190,6 +190,17 @@ function bindScreenLogic(name) {
 
         if (finishBtn) finishBtn.addEventListener('click', () => loadScreen('splash'));
         if (skipBtn) skipBtn.addEventListener('click', () => loadScreen('splash'));
+    if (name === 'settings') {
+        const backBtn = appContainer.querySelector('[data-icon="arrow_back"]')?.parentNode;
+        if (backBtn) backBtn.addEventListener('click', () => loadScreen('splash'));
+
+        const editBtn = Array.from(appContainer.querySelectorAll('button')).find(b => b.innerText.includes('Edit'));
+        if (editBtn) editBtn.addEventListener('click', () => loadScreen('profile'));
+
+        const logoutBtn = Array.from(appContainer.querySelectorAll('button')).find(b => b.innerText.includes('Logout'));
+        if (logoutBtn) logoutBtn.addEventListener('click', () => loadScreen('splash'));
+
+        bindNav();
     }
 }
 
