@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8"/>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover"/>
+    <meta name="description" content="Luminous — anonymous random video chat with strangers"/>
+    <meta name="theme-color" content="#0a0b16"/>
+    <meta name="mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-capable" content="yes"/>
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+    <title>Luminous Chat</title>
+
+    <link href="https://fonts.googleapis.com/css2?family=Manrope:wght@400;600;700;800&family=Inter:wght@400;500;600&display=swap" rel="stylesheet"/>
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap" rel="stylesheet"/>
+    <link rel="manifest" href="/manifest.json"/>
+    <link rel="apple-touch-icon" href="/icon.png"/>
+    <script src="https://cdn.tailwindcss.com?plugins=forms"></script>
+    <script>
+        tailwind.config = {
+            theme: { extend: {
+                colors: { primary:'#6366f1', error:'#ef4444' },
+                fontFamily: { headline:['Manrope','sans-serif'], body:['Inter','sans-serif'] }
+            }}
+        }
+    </script>
+    <link rel="stylesheet" href="style.css"/>
+</head>
+
+<!--
+  LAYOUT STRATEGY
+  ───────────────
+  Desktop  → CSS Grid: header + (video-stage | chat-sidebar)
+  Mobile   → Flex Column: header + video-stage + collapsible chat sheet
+  
+  No position:fixed hacks. Everything lives in document flow.
+  The video-stage uses position:relative so overlays (PiP, controls)
+  are contained and don't bleed outside.
+-->
+
+<body>
+
+<!-- ── Header ──────────────────────────────────────────── -->
+<header id="app-header">
+    <div class="header-inner">
+        <div class="flex items-center gap-2">
+            <div class="logo-icon">
+                <span class="material-symbols-outlined" style="font-size:16px">videocam</span>
+            </div>
+            <h1 class="font-headline font-extrabold text-sm tracking-tight text-white">Luminous Chat</h1>
+        </div>
+        <div class="flex items-center gap-2">
+            <span id="conn-dot" class="status-dot"></span>
+            <span id="connection-status" class="text-xs font-semibold text-white/50 max-w-[130px] truncate">Connecting…</span>
+        </div>
+    </div>
+</header>
+
+<!-- ── App Layout ───────────────────────────────────────── -->
+<div id="app-layout">
+
+    <!-- ══ Video Stage ══════════════════════════════════ -->
+    <div id="video-stage">
+
+        <!-- Remote Video (fills stage, hidden until matched) -->
+        <video id="remote-video" autoplay playsinline></video>
+
+        <!-- Setup Overlay (User selects gender and preference) -->
+        <div id="setup-overlay" class="stage-overlay hidden">
+            <div class="searching-bg"></div>
+            <div class="relative z-10 w-[90%] max-w-sm">
+                <div class="bg-black/40 backdrop-blur-2xl border border-white/10 p-6 rounded-3xl text-center shadow-2xl">
+                    <div class="w-12 h-12 rounded-full gradient-cta mx-auto flex items-center justify-center mb-4">
+                        <span class="material-symbols-outlined text-white">person</span>
+                    </div>
+                    <h2 class="font-headline font-black text-white text-2xl tracking-tight mb-6">Who are you?</h2>
+                    
+                    <div class="mb-5 text-left">
+                        <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-wider mb-2 px-1">I am</label>
+                        <div class="flex gap-2">
+                            <button class="sel-btn flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold text-white/60 transition-all hover:bg-white/10 active:scale-95" data-group="my-gender" data-val="male">👦 Guy</button>
+                            <button class="sel-btn flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold text-white/60 transition-all hover:bg-white/10 active:scale-95" data-group="my-gender" data-val="female">👧 Girl</button>
+                        </div>
+                    </div>
+
+                    <div class="mb-6 text-left">
+                        <label class="block text-[0.65rem] font-bold text-white/40 uppercase tracking-wider mb-2 px-1">Looking for</label>
+                        <div class="flex gap-2">
+                            <button class="sel-btn flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold text-white/60 transition-all hover:bg-white/10 active:scale-95" data-group="pref-gender" data-val="male">👦 Guys</button>
+                            <button class="sel-btn flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold text-white/60 transition-all hover:bg-white/10 active:scale-95" data-group="pref-gender" data-val="female">👧 Girls</button>
+                            <button class="sel-btn flex-1 bg-white/5 border border-white/10 py-3 rounded-xl text-sm font-bold text-white/60 transition-all hover:bg-white/10 active:scale-95" data-group="pref-gender" data-val="both">👽 Any</button>
+                        </div>
+                    </div>
+
+                    <button id="save-profile-btn" class="w-full bg-primary/20 text-primary border border-primary/30 py-3.5 rounded-xl font-headline font-bold transition-all disabled:opacity-40 disabled:cursor-not-allowed" disabled>
+                        CONTINUE
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Searching Overlay (sits on top of video) -->
+        <div id="searching-overlay" class="stage-overlay">
+            <div class="searching-bg"></div>
+            <div class="searching-content">
+                <div class="searching-orb">
+                    <span class="material-symbols-outlined text-white" style="font-size:48px">person_search</span>
+                </div>
+                <h2 id="overlay-text" class="font-headline font-black text-white text-2xl md:text-3xl mt-8 tracking-tight">
+                    Searching for a stranger…
+                </h2>
+                <p id="overlay-sub" class="text-sm text-white/40 mt-2">
+                    Please allow camera &amp; microphone access
+                </p>
+                <button id="start-btn" class="start-btn hidden">
+                    <span class="material-symbols-outlined">play_arrow</span>START
+                </button>
+            </div>
+        </div>
+
+        <!-- LIVE badge (top-left) -->
+        <div id="live-tag" class="stage-badge stage-badge--left hidden">
+            <span class="live-dot"></span>
+            <span class="text-[0.65rem] font-black uppercase tracking-widest">LIVE</span>
+        </div>
+
+        <!-- Partner ID (top-right) -->
+        <div id="partner-id-tag" class="stage-badge stage-badge--right hidden">
+            <span id="partner-id-text" class="text-xs font-bold text-white/80"></span>
+        </div>
+
+        <!-- PiP: local camera (draggable, absolute within stage) -->
+        <div id="pip-container">
+            <video id="local-video" autoplay playsinline muted></video>
+            <span id="my-anon-id" class="pip-label">You</span>
+        </div>
+
+        <!-- Floating Controls (bottom-center of stage) -->
+        <div id="controls-bar">
+            <button id="toggle-mic"   class="ctrl-btn" title="Microphone">
+                <span class="material-symbols-outlined" style="font-size:20px">mic</span>
+            </button>
+            <button id="toggle-video-btn" class="ctrl-btn" title="Camera">
+                <span class="material-symbols-outlined" style="font-size:20px">videocam</span>
+            </button>
+            <div class="ctrl-divider"></div>
+            <button id="report-btn" class="ctrl-btn report-btn hidden" title="Report">
+                <span class="material-symbols-outlined" style="font-size:20px">flag</span>
+            </button>
+            <div class="ctrl-divider report-sep hidden"></div>
+            <button id="next-btn" class="next-btn">
+                <span class="font-headline font-black text-sm tracking-wider">NEXT</span>
+                <span class="material-symbols-outlined" style="font-size:18px">skip_next</span>
+            </button>
+            <!-- Chat toggle -->
+            <div class="ctrl-divider"></div>
+            <button id="chat-toggle-btn" class="ctrl-btn" title="Chat">
+                <span class="material-symbols-outlined" style="font-size:20px">chat</span>
+                <span id="chat-badge" class="chat-badge hidden">!</span>
+            </button>
+        </div>
+
+    </div><!-- /video-stage -->
+
+    <!-- ══ Chat Panel ════════════════════════════════════ -->
+    <div id="chat-panel">
+
+        <!-- Drag handle -->
+        <div id="chat-handle">
+            <div class="handle-bar"></div>
+            <div class="handle-header">
+                <div class="flex items-center gap-2">
+                    <div id="chat-status-dot" class="status-dot"></div>
+                    <h3 class="font-headline font-bold text-sm text-white">Live Chat</h3>
+                </div>
+                <span id="chat-partner-name" class="text-xs text-white/30 truncate max-w-[120px]">Offline</span>
+            </div>
+        </div>
+
+        <!-- Messages -->
+        <div id="chat-messages">
+            <div id="chat-placeholder" class="chat-placeholder">
+                Chat starts when you are matched.
+            </div>
+        </div>
+
+        <!-- Input -->
+        <form id="chat-form" class="chat-input-form">
+            <div class="chat-input-wrap">
+                <input id="chat-input" disabled
+                    class="chat-input"
+                    placeholder="Type a message…" type="text"
+                    autocomplete="off" maxlength="500"/>
+                <button type="submit" id="chat-submit" disabled class="chat-send">
+                    <span class="material-symbols-outlined" style="font-size:22px">send</span>
+                </button>
+            </div>
+        </form>
+
+    </div><!-- /chat-panel -->
+
+</div><!-- /app-layout -->
+
+<!-- ── Banned Overlay ──────────────────────────────────── -->
+<div id="banned-overlay" class="banned-overlay hidden">
+    <span class="material-symbols-outlined banned-icon">gavel</span>
+    <h1 class="font-headline font-black text-4xl mb-3">Access Denied</h1>
+    <p class="text-gray-400 max-w-sm mb-2">You have been removed for violating community guidelines.</p>
+    <p id="ban-time" class="text-sm font-bold text-primary">Ban expiry: calculating…</p>
+</div>
+
+<!-- Scripts -->
+<script src="/socket.io/socket.io.js"></script>
+<script src="services/socket.js"></script>
+<script src="services/webrtc.js"></script>
+<script src="script.js"></script>
+    <!-- Registration for Service Worker -->
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js').then(reg => {
+                    console.log('PWA Service Worker registered');
+                }).catch(err => {
+                    console.log('PWA registration failed: ', err);
+                });
+            });
+        }
+    </script>
+</body>
+</html>

@@ -3,7 +3,7 @@
    The socket auto-reconnects; callers just import this file.
 ──────────────────────────────────────────────────────────────── */
 
-const socket = io({
+window.socket = io({
     transports   : ['polling', 'websocket'],
     reconnection : true,
     reconnectionAttempts : Infinity,

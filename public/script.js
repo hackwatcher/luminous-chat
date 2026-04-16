@@ -1,434 +1,164 @@
 /* ════════════════════════════════════════════════════════════
-   script.js  —  Main Application Controller
+   script.js  —  Main Application Controller (Pulse UI Version)
+   Handles Dynamic Screen Loading & Logic Binding
 ════════════════════════════════════════════════════════════ */
 'use strict';
 
-/* ─── DOM ──────────────────────────────────────────────── */
-const localVideo        = document.getElementById('local-video');
-const remoteVideo       = document.getElementById('remote-video');
-const searchingOverlay  = document.getElementById('searching-overlay');
-const setupOverlay      = document.getElementById('setup-overlay');
-const saveProfileBtn    = document.getElementById('save-profile-btn');
-const startBtn          = document.getElementById('start-btn');
-const overlayText       = document.getElementById('overlay-text');
-const overlaySub        = document.getElementById('overlay-sub');
-const liveTag           = document.getElementById('live-tag');
-const nextBtn           = document.getElementById('next-btn');
-const reportBtn         = document.getElementById('report-btn');
-const bannedOverlay     = document.getElementById('banned-overlay');
-const banTimeText       = document.getElementById('ban-time');
-const chatMessages      = document.getElementById('chat-messages');
-const chatForm          = document.getElementById('chat-form');
-const chatInput         = document.getElementById('chat-input');
-const chatSubmit        = document.getElementById('chat-submit');
-const connStatus        = document.getElementById('connection-status');
-const connDot           = document.getElementById('conn-dot');
-const chatStatusDot     = document.getElementById('chat-status-dot');
-const chatPartnerName   = document.getElementById('chat-partner-name');
-const partnerIdTag      = document.getElementById('partner-id-tag');
-const partnerIdText     = document.getElementById('partner-id-text');
-const myAnonLabel       = document.getElementById('my-anon-id');
-const chatPanel         = document.getElementById('chat-panel');
-const chatHandle        = document.getElementById('chat-handle');
-const chatToggleBtn     = document.getElementById('chat-toggle-btn');
-const chatBadge         = document.getElementById('chat-badge');
-const pipContainer      = document.getElementById('pip-container');
-const reportSeps        = document.querySelectorAll('.report-sep');
+/* ─── Global State ───────────────────────────────────────── */
+const appContainer = document.getElementById('app-container');
+let currentScreen  = '';
+let localStream     = null;
+let isSearchActive  = false;
 
-/* ─── State ────────────────────────────────────────────── */
-let localStream          = null;
-let isConnected          = false;
-let myAnonId             = '';
-let currentPartnerAnonId = '';
-let chatPlaceholderEl    = document.getElementById('chat-placeholder');
-const sentMessages       = new Set();
-
-/* ─── Profile State ────────────────────────────────────── */
-let myProfile = { gender: null, pref: null };
-
-/* ════════════════════════════════════════════════════════
-   CHAT PANEL
-════════════════════════════════════════════════════════ */
-let chatOpen = false;
-let unreadCount = 0;
-
-function openChat() {
-    chatOpen = true;
-    chatPanel.classList.add('open');
-    unreadCount = 0;
-    if (chatBadge) { chatBadge.classList.add('hidden'); chatBadge.innerText = '!'; }
-    setTimeout(() => { chatMessages.scrollTop = chatMessages.scrollHeight; }, 60);
+/* ─── Screen Manager ─────────────────────────────────────── */
+async function loadScreen(screenName) {
+    if (currentScreen === screenName) return;
+    
+    // Smooth transition
+    appContainer.classList.add('screen-fade-out');
+    
+    try {
+        const response = await fetch(`/screens/${screenName}.html`);
+        let html = await response.text();
+        
+        // Strip <html>, <head>, <body> tags if present in the partial
+        const parser = new DOMParser();
+        const doc = parser.parseFromString(html, 'text/html');
+        // Extract content from body or take the whole thing if no body
+        const content = doc.body ? doc.body.innerHTML : html;
+        
+        setTimeout(() => {
+            appContainer.innerHTML = content;
+            appContainer.classList.remove('screen-fade-out');
+            currentScreen = screenName;
+            bindScreenLogic(screenName);
+        }, 300);
+        
+    } catch (err) {
+        console.error('Error loading screen:', err);
+    }
 }
 
-function closeChat() {
-    chatOpen = false;
-    chatPanel.classList.remove('open');
-}
-
-function toggleChat() { chatOpen ? closeChat() : openChat(); }
-
-if (chatToggleBtn) chatToggleBtn.addEventListener('click', toggleChat);
-
-/* ── Touch drag on handle ── */
-let dragStartY   = 0;
-let dragWasDragging = false;
-
-if (chatHandle) {
-    chatHandle.addEventListener('touchstart', (e) => {
-        dragStartY = e.touches[0].clientY;
-        dragWasDragging = false;
-        chatPanel.style.transition = 'none';
-    }, { passive: true });
-
-    chatHandle.addEventListener('touchmove', (e) => {
-        dragWasDragging = true;
-        const dy = e.touches[0].clientY - dragStartY;
-        // Drag down to close (when open), drag up to open (when closed)
-        if (chatOpen && dy > 0) {
-            chatPanel.style.height = `calc(var(--chat-open, 52vh) - ${dy}px)`;
+/* ─── Logic Binding ──────────────────────────────────────── */
+function bindScreenLogic(name) {
+    console.log(`[Pulse] Binding logic for: ${name}`);
+    
+    if (name === 'splash') {
+        const startBtn = appContainer.querySelector('button'); // Main action button
+        if (startBtn) {
+            startBtn.addEventListener('click', () => {
+                socket.emit('start-search');
+                loadScreen('chat');
+            });
         }
-    }, { passive: true });
+    }
+    
+    if (name === 'chat') {
+        // Find existing video elements in the template or use our logic ones
+        const remoteVidEl = appContainer.querySelector('img[alt="Remote User"]'); // Placeholder
+        const localVidEl  = appContainer.querySelector('img[alt="Self Preview"]'); // Placeholder
+        
+        // Replace placeholders with real video elements
+        if (remoteVidEl) {
+            const v = document.createElement('video');
+            v.id = 'remote-video';
+            v.className = remoteVidEl.className;
+            v.autoplay = true;
+            v.playsinline = true;
+            remoteVidEl.parentNode.replaceChild(v, remoteVidEl);
+        }
+        if (localVidEl) {
+            const v = document.createElement('video');
+            v.id = 'local-video';
+            v.className = localVidEl.className;
+            v.autoplay = true;
+            v.playsinline = true;
+            v.muted = true;
+            localVidEl.parentNode.replaceChild(v, localVidEl);
+            if (localStream) v.srcObject = localStream;
+        }
 
-    chatHandle.addEventListener('touchend', (e) => {
-        chatPanel.style.transition = '';
-        chatPanel.style.height = '';
-        if (!dragWasDragging) { toggleChat(); return; }
-        const dy = e.changedTouches[0].clientY - dragStartY;
-        if (chatOpen && dy > 70) { closeChat(); }
-        else if (!chatOpen && dy < -70) { openChat(); }
-        else { chatOpen ? openChat() : closeChat(); }
-    }, { passive: true });
+        // Bind Buttons
+        const nextBtn = Array.from(appContainer.querySelectorAll('button')).find(b => b.innerText.includes('NEXT'));
+        if (nextBtn) {
+            nextBtn.addEventListener('click', () => socket.emit('next'));
+        }
+
+        const endCallBtn = appContainer.querySelector('.bg-error-container');
+        if (endCallBtn) {
+            endCallBtn.addEventListener('click', () => {
+                socket.emit('next'); // For now, just find next
+                loadScreen('splash');
+            });
+        }
+
+        // Nav Buttons
+        bindNav();
+    }
+
+    if (name === 'profile') {
+        const saveBtn = Array.from(appContainer.querySelectorAll('button')).find(b => b.innerText.includes('Save'));
+        if (saveBtn) {
+            saveBtn.addEventListener('click', () => {
+                // Collect dummy preferences for now
+                socket.emit('set-preferences', { gender: 'male', pref: 'both' });
+                loadScreen('chat');
+            });
+        }
+        
+        const backBtn = appContainer.querySelector('button .material-symbols-outlined[data-icon="arrow_back"]')?.parentNode;
+        if (backBtn) backBtn.addEventListener('click', () => loadScreen('chat'));
+
+        bindNav();
+    }
 }
 
-/* ── Tap video to close chat ── */
-document.getElementById('video-stage')?.addEventListener('click', () => {
-    if (chatOpen) closeChat();
-});
-
-/* ════════════════════════════════════════════════════════
-   PiP DRAG  (touch only, snaps to nearest corner)
-════════════════════════════════════════════════════════ */
-if (pipContainer) {
-    let pip = { dragging: false, startX: 0, startY: 0 };
-
-    pipContainer.addEventListener('touchstart', (e) => {
-        e.stopPropagation();
-        const t = e.touches[0];
-        const r = pipContainer.getBoundingClientRect();
-        pip = { dragging: true, startX: t.clientX - r.left, startY: t.clientY - r.top };
-        pipContainer.style.transition = 'none';
-        // Switch from bottom/right to top/left for free movement
-        pipContainer.style.bottom = pipContainer.style.right = '';
-        pipContainer.style.left = r.left + 'px';
-        pipContainer.style.top  = r.top  + 'px';
-    }, { passive: true });
-
-    document.addEventListener('touchmove', (e) => {
-        if (!pip.dragging) return;
-        const t   = e.touches[0];
-        const stage = document.getElementById('video-stage').getBoundingClientRect();
-        const pw  = pipContainer.offsetWidth;
-        const ph  = pipContainer.offsetHeight;
-        let x = t.clientX - pip.startX - stage.left;
-        let y = t.clientY - pip.startY - stage.top;
-        x = Math.max(8, Math.min(stage.width  - pw - 8, x));
-        y = Math.max(8, Math.min(stage.height - ph - 8, y));
-        pipContainer.style.left = x + 'px';
-        pipContainer.style.top  = y + 'px';
-    }, { passive: true });
-
-    document.addEventListener('touchend', () => {
-        if (!pip.dragging) return;
-        pip.dragging = false;
-        pipContainer.style.transition = 'box-shadow .2s';
-        // Snap to nearest corner
-        const stage = document.getElementById('video-stage').getBoundingClientRect();
-        const r     = pipContainer.getBoundingClientRect();
-        const cx    = r.left + r.width  / 2 - stage.left;
-        const cy    = r.top  + r.height / 2 - stage.top;
-        pipContainer.style.top = pipContainer.style.left = pipContainer.style.right = pipContainer.style.bottom = '';
-        if (cx < stage.width / 2)  { pipContainer.style.left  = '12px'; }
-        else                        { pipContainer.style.right = '12px'; }
-        if (cy < stage.height / 2) { pipContainer.style.top    = '12px'; }
-        else                        { pipContainer.style.bottom = '90px'; }
-    }, { passive: true });
+function bindNav() {
+    const navButtons = appContainer.querySelectorAll('nav button');
+    if (navButtons.length >= 3) {
+        navButtons[1].addEventListener('click', () => loadScreen('chat'));    // Live
+        navButtons[2].addEventListener('click', () => loadScreen('profile')); // Profile (Chat bubble icon was Profile in template)
+    }
 }
 
-/* ════════════════════════════════════════════════════════
-   MEDIA
-════════════════════════════════════════════════════════ */
+/* ─── Media ──────────────────────────────────────────────── */
 async function initMedia() {
     try {
-        localStream = await navigator.mediaDevices.getUserMedia({
-            video: { width: { ideal: 1280 }, height: { ideal: 720 }, facingMode: 'user' },
-            audio: true,
-        });
-        localVideo.srcObject = localStream;
-        
-        // Show setup overlay if no profile, otherwise restore profile and show start state
-        const saved = localStorage.getItem('luminous_profile');
-        if (saved) {
-            myProfile = JSON.parse(saved);
-            socket.emit('set-preferences', myProfile);
-            setOverlay('Camera ready', 'Tap START to find a stranger');
-            startBtn.classList.remove('hidden');
-        } else {
-            setupOverlay.classList.remove('hidden');
-        }
-        
-        setConnStatus(myAnonId || 'Online', 'green');
+        localStream = await navigator.mediaDevices.getUserMedia({ video: true, audio: true });
+        // After media is ready, load splash
+        loadScreen('splash');
     } catch (err) {
-        console.error('[Media]', err.name, err.message);
-        setOverlay('Camera access denied', 'Please allow camera & microphone, then refresh');
-        setConnStatus('Error', 'red');
+        console.error('Camera Access Denied:', err);
+        loadScreen('splash'); // Still load splash but maybe show error
     }
 }
 
-/* ════════════════════════════════════════════════════════
-   UI HELPERS
-════════════════════════════════════════════════════════ */
-function setConnStatus(label, color) {
-    if (connStatus) connStatus.innerText = label;
-    if (connDot) {
-        const c = { green:'#22c55e', yellow:'#facc15', red:'#ef4444', gray:'#6b7280' };
-        connDot.style.background = c[color] || c.gray;
+/* ─── Socket Events ──────────────────────────────────────── */
+socket.on('matched', async ({ partnerAnonId, isInitiator }) => {
+    console.log(`Connected with: ${partnerAnonId} | Initiator: ${isInitiator}`);
+    
+    // Ensure we are on chat screen
+    if (currentScreen !== 'chat') await loadScreen('chat');
+    
+    const rv = document.getElementById('remote-video');
+    const lv = document.getElementById('local-video');
+    
+    if (lv && localStream) lv.srcObject = localStream;
+
+    setupPeerConnection(localStream, rv, (sig) => socket.emit('webrtc-signal', sig));
+    
+    if (isInitiator) {
+        // Wait a small bit for the other peer to be ready
+        setTimeout(async () => {
+            await createOffer((sig) => socket.emit('webrtc-signal', sig));
+        }, 1000);
     }
-}
-
-function setOverlay(title, sub) {
-    if (overlayText) overlayText.innerText = title;
-    if (overlaySub)  overlaySub.innerText  = sub || '';
-}
-
-function setChatStatus(online, name) {
-    const color = online ? '#22c55e' : '#4b5563';
-    const label = online ? (name || 'Connected') : 'Offline';
-    if (chatStatusDot) chatStatusDot.style.background = color;
-    if (chatPartnerName) chatPartnerName.innerText = label;
-}
-
-function showReport(show) {
-    reportBtn.classList.toggle('hidden', !show);
-    reportSeps.forEach(el => el.classList.toggle('hidden', !show));
-}
-
-/* ════════════════════════════════════════════════════════
-   SOCKET EVENTS
-════════════════════════════════════════════════════════ */
-window.addEventListener('socket:connect',      () => setConnStatus(myAnonId || 'Connecting…', 'yellow'));
-window.addEventListener('socket:disconnect',   () => { setConnStatus('Reconnecting…', 'red'); resetChatUI(); });
-window.addEventListener('socket:reconnecting', () => setConnStatus('Reconnecting…', 'yellow'));
-window.addEventListener('socket:reconnect',    () => setConnStatus(myAnonId || 'Reconnected', 'green'));
-
-socket.on('your-id', (id) => {
-    myAnonId = id;
-    if (myAnonLabel) myAnonLabel.innerText = id;
-    setConnStatus(id, 'green');
 });
 
 socket.on('searching', () => {
-    isConnected          = false;
-    currentPartnerAnonId = '';
-    teardown();
-    remoteVideo.srcObject = null;
-
-    searchingOverlay.style.display = '';  // show overlay
-    liveTag.classList.add('hidden');
-    if (partnerIdTag) partnerIdTag.classList.add('hidden');
-    showReport(false);
-    setChatStatus(false);
-    closeChat();
-
-    setOverlay('Searching for a stranger…', 'Looking for someone to connect with');
-    setConnStatus(myAnonId, 'yellow');
-    resetChatUI();
-    appendSystemMessage('Searching for a stranger…');
-    disableChat();
+    console.log('Searching...');
+    // Maybe show a "Searching" overlay on the chat screen
 });
 
-socket.on('matched', async ({ partnerAnonId, isInitiator }) => {
-    isConnected          = true;
-    currentPartnerAnonId = partnerAnonId;
-
-    searchingOverlay.style.display = 'none';  // hide overlay
-    liveTag.classList.remove('hidden');
-    if (partnerIdTag)  partnerIdTag.classList.remove('hidden');
-    if (partnerIdText) partnerIdText.innerText = partnerAnonId;
-    showReport(true);
-    setChatStatus(true, partnerAnonId);
-    setConnStatus(myAnonId, 'green');
-
-    appendSystemMessage(`Connected with ${partnerAnonId} 🌟`);
-    enableChat();
-
-    // Auto-open chat
-    setTimeout(openChat, 700);
-
-    setupPeerConnection(localStream, remoteVideo, (sig) => socket.emit('webrtc-signal', sig));
-    if (isInitiator) await createOffer((sig) => socket.emit('webrtc-signal', sig));
-});
-
-socket.on('webrtc-signal', (data) => {
-    handleSignal(data, (sig) => socket.emit('webrtc-signal', sig));
-});
-
-socket.on('partner-disconnected', () => {
-    if (isConnected) appendSystemMessage('Stranger disconnected.');
-    isConnected = false;
-    setChatStatus(false);
-});
-
-socket.on('banned', ({ unbanDate }) => {
-    bannedOverlay.classList.remove('hidden');
-    bannedOverlay.style.display = 'flex';
-    if (banTimeText && unbanDate)
-        banTimeText.innerText = `Ban expires: ${new Date(unbanDate).toLocaleString()}`;
-    if (localStream) localStream.getTracks().forEach(t => t.stop());
-    teardown();
-});
-
-socket.on('system-warning', (msg) => appendSystemMessage('⚠️ ' + msg));
-
-socket.on('chat-message', (text) => {
-    if (typeof text !== 'string') return;
-    appendRemoteMessage(text.trim().slice(0, 500));
-    if (!chatOpen) {
-        unreadCount++;
-        if (chatBadge) {
-            chatBadge.classList.remove('hidden');
-            chatBadge.innerText = unreadCount > 9 ? '9+' : String(unreadCount);
-        }
-    }
-});
-
-/* ════════════════════════════════════════════════════════
-   PROFILE SETUP
-════════════════════════════════════════════════════════ */
-document.querySelectorAll('.sel-btn').forEach(btn => {
-    btn.addEventListener('click', (e) => {
-        const group = btn.getAttribute('data-group');
-        const val   = btn.getAttribute('data-val');
-        
-        // Remove active class from others in same group
-        document.querySelectorAll(`.sel-btn[data-group="${group}"]`).forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-
-        if (group === 'my-gender') myProfile.gender = val;
-        if (group === 'pref-gender') myProfile.pref = val;
-
-        saveProfileBtn.disabled = !(myProfile.gender && myProfile.pref);
-    });
-});
-
-if (saveProfileBtn) {
-    saveProfileBtn.addEventListener('click', () => {
-        localStorage.setItem('luminous_profile', JSON.stringify(myProfile));
-        socket.emit('set-preferences', myProfile);
-        setupOverlay.classList.add('hidden');
-        
-        // Immediately start searching if they just created profile
-        socket.emit('start-search');
-    });
-}
-
-/* ════════════════════════════════════════════════════════
-   CONTROLS
-════════════════════════════════════════════════════════ */
-startBtn.addEventListener('click', () => {
-    if (!myProfile.gender) {
-        setupOverlay.classList.remove('hidden');
-        return;
-    }
-    socket.emit('start-search');
-});
-nextBtn.addEventListener('click',  () => { closeChat(); socket.emit('next'); });
-
-reportBtn.addEventListener('click', () => {
-    if (!isConnected) return;
-    socket.emit('report-partner');
-    appendSystemMessage('⚠️ Report submitted.');
-    showReport(false);
-});
-
-chatForm.addEventListener('submit', (e) => {
-    e.preventDefault();
-    const text = chatInput.value.trim().slice(0, 500);
-    if (!text || !isConnected) return;
-    const key = Date.now() + text;
-    if (sentMessages.has(key)) return;
-    sentMessages.add(key);
-    setTimeout(() => sentMessages.delete(key), 3000);
-    appendLocalMessage(text);
-    socket.emit('chat-message', text);
-    chatInput.value = '';
-});
-
-document.getElementById('toggle-mic').addEventListener('click', function () {
-    if (!localStream) return;
-    const t = localStream.getAudioTracks()[0];
-    if (t) { t.enabled = !t.enabled; this.classList.toggle('active'); }
-});
-
-document.getElementById('toggle-video-btn').addEventListener('click', function () {
-    if (!localStream) return;
-    const t = localStream.getVideoTracks()[0];
-    if (t) { t.enabled = !t.enabled; this.classList.toggle('active'); }
-});
-
-chatInput.addEventListener('focus', () => {
-    openChat();
-    setTimeout(() => chatInput.scrollIntoView({ behavior:'smooth', block:'center' }), 300);
-});
-
-/* ════════════════════════════════════════════════════════
-   CHAT UI
-════════════════════════════════════════════════════════ */
-function removePlaceholder() {
-    if (chatPlaceholderEl?.parentNode === chatMessages) {
-        chatMessages.removeChild(chatPlaceholderEl);
-        chatPlaceholderEl = null;
-    }
-}
-const scrollChat = () => { chatMessages.scrollTop = chatMessages.scrollHeight; };
-
-function appendLocalMessage(text) {
-    removePlaceholder();
-    const wrap = document.createElement('div'); wrap.className = 'msg-row-local';
-    const name = document.createElement('div'); name.className = 'msg-name'; name.innerText = 'You';
-    const b    = document.createElement('div'); b.className = 'local-msg';   b.innerText = text;
-    wrap.append(name, b); chatMessages.appendChild(wrap); scrollChat();
-}
-
-function appendRemoteMessage(text) {
-    removePlaceholder();
-    const wrap = document.createElement('div'); wrap.className = 'msg-row-remote';
-    const name = document.createElement('div'); name.className = 'msg-name'; name.innerText = currentPartnerAnonId || 'Stranger';
-    const b    = document.createElement('div'); b.className = 'remote-msg';  b.innerText = text;
-    wrap.append(name, b); chatMessages.appendChild(wrap); scrollChat();
-}
-
-function appendSystemMessage(text) {
-    removePlaceholder();
-    const el = document.createElement('div'); el.className = 'system-msg'; el.innerText = text;
-    chatMessages.appendChild(el); scrollChat();
-}
-
-function enableChat()  { chatInput.disabled = false; chatSubmit.disabled = false; chatInput.focus(); }
-function disableChat() { chatInput.disabled = true;  chatSubmit.disabled = true; }
-
-function resetChatUI() {
-    chatMessages.innerHTML = '';
-    chatPlaceholderEl = document.createElement('div');
-    chatPlaceholderEl.id = 'chat-placeholder';
-    chatPlaceholderEl.className = 'chat-placeholder';
-    chatPlaceholderEl.innerText = 'Chat starts when you are matched.';
-    chatMessages.appendChild(chatPlaceholderEl);
-    sentMessages.clear();
-    unreadCount = 0;
-    if (chatBadge) chatBadge.classList.add('hidden');
-}
-
-/* ════════════════════════════════════════════════════════
-   BOOT
-════════════════════════════════════════════════════════ */
+/* ─── Boot ───────────────────────────────────────────────── */
 initMedia();
