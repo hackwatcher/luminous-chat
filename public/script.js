@@ -154,6 +154,25 @@ function bindScreenLogic(name) {
 
         bindNav();
     }
+
+    if (name === 'inbox') {
+        const headerProfile = appContainer.querySelector('header img');
+        if (headerProfile) {
+            headerProfile.addEventListener('click', () => loadScreen('profile'));
+        }
+
+        const chatItems = appContainer.querySelectorAll('.glass-card, .bg-surface-container');
+        chatItems.forEach(item => {
+            item.addEventListener('click', () => {
+                alert('Sohbet detayı yakında eklenecek! (Mesajlaşma Ekranı)');
+            });
+        });
+
+        const settingsBtn = appContainer.querySelector('button .material-symbols-outlined[data-icon="settings"]')?.parentNode;
+        if (settingsBtn) settingsBtn.addEventListener('click', () => loadScreen('profile'));
+
+        bindNav();
+    }
 }
 
 function bindNav() {
