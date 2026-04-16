@@ -102,8 +102,8 @@ function bindScreenLogic(name) {
         const endCallBtn = appContainer.querySelector('.bg-error-container');
         if (endCallBtn) {
             endCallBtn.addEventListener('click', () => {
-                socket.emit('next'); // For now, just find next
-                loadScreen('splash');
+                socket.emit('next'); 
+                loadScreen('rating'); // Go to rating instead of splash
             });
         }
 
@@ -173,6 +173,24 @@ function bindScreenLogic(name) {
 
         bindNav();
     }
+
+    if (name === 'rating') {
+        const reactions = Array.from(appContainer.querySelectorAll('button.group'));
+        reactions.forEach(btn => {
+            btn.addEventListener('click', () => {
+                // Visual feedback
+                reactions.forEach(r => r.querySelector('div').classList.remove('bg-primary-container', 'text-on-primary-container'));
+                btn.querySelector('div').classList.add('bg-primary-container', 'text-on-primary-container');
+                console.log(`Pulse: Rated as ${btn.innerText.trim()}`);
+            });
+        });
+
+        const finishBtn = Array.from(appContainer.querySelectorAll('button')).find(b => b.innerText.includes('Bitti') || b.innerText.includes('Daha sonra'));
+        const skipBtn = Array.from(appContainer.querySelectorAll('button')).find(b => b.innerText.includes('Daha sonra'));
+
+        if (finishBtn) finishBtn.addEventListener('click', () => loadScreen('splash'));
+        if (skipBtn) skipBtn.addEventListener('click', () => loadScreen('splash'));
+    }
 }
 
 function bindNav() {
@@ -182,12 +200,12 @@ function bindNav() {
     const homeBtn    = nav.querySelector('[data-icon="home"]')?.parentNode;
     const discBtn    = nav.querySelector('[data-icon="style"]')?.parentNode;
     const liveBtn    = nav.querySelector('[data-icon="videocam"]')?.parentNode;
-    const profileBtn = nav.querySelector('[data-icon="chat_bubble"]')?.parentNode || nav.querySelector('[data-icon="person"]')?.parentNode;
+    const inboxBtn   = nav.querySelector('[data-icon="chat_bubble"]')?.parentNode;
 
     if (homeBtn)    homeBtn.addEventListener('click',    () => loadScreen('splash'));
     if (discBtn)    discBtn.addEventListener('click',    () => loadScreen('discover'));
     if (liveBtn)    liveBtn.addEventListener('click',    () => loadScreen('chat'));
-    if (profileBtn) profileBtn.addEventListener('click', () => loadScreen('profile'));
+    if (inboxBtn)   inboxBtn.addEventListener('click',   () => loadScreen('inbox'));
 }
 
 /* ─── Media ──────────────────────────────────────────────── */
