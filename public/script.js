@@ -44,13 +44,27 @@ function bindScreenLogic(name) {
     console.log(`[Pulse] Binding logic for: ${name}`);
     
     if (name === 'splash') {
-        const startBtn = appContainer.querySelector('button'); // Main action button
+        const startBtn = appContainer.querySelector('button'); 
         if (startBtn) {
             startBtn.addEventListener('click', () => {
+                loadScreen('connecting');
                 socket.emit('start-search');
-                loadScreen('chat');
             });
         }
+    }
+
+    if (name === 'connecting') {
+        // Bind Stop Search Button
+        const stopBtn = appContainer.querySelector('button');
+        if (stopBtn) {
+            stopBtn.addEventListener('click', () => {
+                socket.emit('next');
+                loadScreen('splash');
+            });
+        }
+        
+        // Ensure Nav is hidden or bound if exists
+        bindNav();
     }
     
     if (name === 'chat') {
@@ -157,7 +171,7 @@ socket.on('matched', async ({ partnerAnonId, isInitiator }) => {
 
 socket.on('searching', () => {
     console.log('Searching...');
-    // Maybe show a "Searching" overlay on the chat screen
+    if (currentScreen !== 'connecting') loadScreen('connecting');
 });
 
 /* ─── Boot ───────────────────────────────────────────────── */
