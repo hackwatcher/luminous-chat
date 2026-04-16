@@ -126,17 +126,47 @@ function bindScreenLogic(name) {
 
         bindNav();
     }
+
+    if (name === 'discover') {
+        const buttons = Array.from(appContainer.querySelectorAll('button'));
+        
+        // Like / Dislike effects
+        const heartBtn = buttons.find(b => b.innerText.includes('favorite') || b.querySelector('[data-icon="favorite"]'));
+        const closeBtn = buttons.find(b => b.innerText.includes('close') || b.querySelector('[data-icon="close"]'));
+        
+        if (heartBtn) heartBtn.addEventListener('click', () => {
+            heartBtn.classList.add('scale-125', 'brightness-125');
+            setTimeout(() => heartBtn.classList.remove('scale-125', 'brightness-125'), 200);
+            console.log('Pulse: Liked Elena!');
+        });
+        
+        if (closeBtn) closeBtn.addEventListener('click', () => {
+            closeBtn.classList.add('scale-75', 'opacity-50');
+            setTimeout(() => closeBtn.classList.remove('scale-75', 'opacity-50'), 200);
+            console.log('Pulse: Skipped Elena');
+        });
+
+        // Header Settings
+        const settingsBtn = appContainer.querySelector('button.material-symbols-outlined');
+        if (settingsBtn && settingsBtn.innerText.includes('settings')) {
+            settingsBtn.addEventListener('click', () => loadScreen('profile'));
+        }
+
+        bindNav();
+    }
 }
 
 function bindNav() {
     const nav = appContainer.querySelector('nav');
     if (!nav) return;
 
-    const homeBtn    = nav.querySelector('[data-icon="home"]')?.parentNode || nav.querySelector('[data-icon="style"]')?.parentNode;
+    const homeBtn    = nav.querySelector('[data-icon="home"]')?.parentNode;
+    const discBtn    = nav.querySelector('[data-icon="style"]')?.parentNode;
     const liveBtn    = nav.querySelector('[data-icon="videocam"]')?.parentNode;
     const profileBtn = nav.querySelector('[data-icon="chat_bubble"]')?.parentNode || nav.querySelector('[data-icon="person"]')?.parentNode;
 
     if (homeBtn)    homeBtn.addEventListener('click',    () => loadScreen('splash'));
+    if (discBtn)    discBtn.addEventListener('click',    () => loadScreen('discover'));
     if (liveBtn)    liveBtn.addEventListener('click',    () => loadScreen('chat'));
     if (profileBtn) profileBtn.addEventListener('click', () => loadScreen('profile'));
 }
